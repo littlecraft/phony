@@ -1,0 +1,7 @@
+autoconf
+automake
+libtoo
+llibspeex-dev
+libspeexdsp-dev
+libdbus-glib-dev
+python-dev

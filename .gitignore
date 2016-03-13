@@ -1,0 +1,4 @@
+.pip_packages
+*.pyc
+__pycache__
+.cache
