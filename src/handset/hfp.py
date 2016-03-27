@@ -1,9 +1,9 @@
+import logging
 import dbus
 from dbus.mainloop.glib import DBusGMainLoop
+from base.classlogger import ClassLogger
 
-"""
-"""
-class Hfp:
+class Hfp(ClassLogger):
   #
   # These are the service and interface names exposed to dbus
   # by the hfpd (nohands) daemon.  @see hfconsole.in in the
@@ -25,18 +25,29 @@ class Hfp:
 
   __started = False
   __bluetooth_available = False
-  __log = None
+  __scanning = False
+
   __dbus = None
   __dbus_controller = None
   __hfpd_interface = None
   __hfpd_properties = None
   __sound_io_interface = None
   __sound_io_properties = None
+
+  __dbus_signal_handler = None
   __hfp_signal_handler = None
 
-  def __init__(self, log):
-    self.__log = log;
-    self.__dbus = dbus.SessionBus(mainloop = DBusGMainLoop())
+  def __init__(self):
+    ClassLogger.__init__(self, __name__)
+
+    main_loop = DBusGMainLoop()
+    self.__dbus = dbus.SessionBus(mainloop = main_loop)
+
+  def __enter__(self):
+    return self
+
+  def __exit__(self, exc_type, exc_value, traceback):
+    self.stop()
 
   def start(self):
     try:
@@ -100,22 +111,17 @@ class Hfp:
       # :-(
       self.fatal("Unsupported version of hfpd: %d" % version)
 
+    self.__dbus_signal_handler = DbusSignalHandler(self, self.__dbus_controller)
     self.__hfp_signal_handler = HfpSignalHandler(self, self.__hfpd_interface)
 
     self.log().info('Connected to Hfp service')
     self.__started = True
 
   def stop(self):
-    pass
+    self.stop_scan()
 
   def started(self):
     return self.__started
-
-  def hfpd(self, name = None, value = None):
-    if (value == None):
-      return self.__hfpd_properties.Get(self.HFPD_HANDSFREE_INTERFACE_NAME, name)
-    else:
-      self.__hfpd_properties.Set(self.HFPD_HANDSFREE_INTERFACE_NAME, name, value)
 
   def enable(self):
     self.log().info('Bluetooth Enabled')
@@ -128,19 +134,54 @@ class Hfp:
   def enabled(self):
     return self.__bluetooth_available
 
+  def scan(self):
+    if not self.__scanning:
+      self.__hfpd_interface.StartInquiry()
+
+  def stop_scan(self):
+    if self.__scanning:
+      self.__hfpd_interface.StopInquiry()
+
+  def scanning(self):
+    return self.__scanning
+
+  def scanning_began(self):
+    self.__scanning = True
+
+  def scanning_completed(self):
+    self.__scanning = False
+
+  def hfpd(self, name = None, value = None):
+    if (value == None):
+      return self.__hfpd_properties.Get(self.HFPD_HANDSFREE_INTERFACE_NAME, name)
+    else:
+      self.__hfpd_properties.Set(self.HFPD_HANDSFREE_INTERFACE_NAME, name, value)
+
   def fatal(self, msg):
     self.log().error(msg)
     raise Exception(msg)
 
-  def log(self, className = 'Hfp'):
-    return self.__log;
+class DbusSignalHandler(ClassLogger):
+  __hfp = None
 
-"""
-"""
-class HfpSignalHandler:
+  def __init__(self, hfp, dbus_controller):
+    ClassLogger.__init__(self, __name__)
+
+    self.__hfp = hfp
+
+    dbus_controller.connect_to_signal("NameOwnerChanged", self.name_owner_changed)
+
+  def name_owner_changed(self, name, old_owner, new_owner):
+    if name != self.__hfp.HFPD_SERVICE_NAME or new_owner != '':
+      return
+    self.__hfp.disable()
+
+class HfpSignalHandler(ClassLogger):
   __hfp = None
 
   def __init__(self, hfp, hfpd_interface):
+    ClassLogger.__init__(self, __name__)
+
     self.__hfp = hfp
 
     hfpd_interface.connect_to_signal('SystemStateChanged', self.system_state_changed)
@@ -157,10 +198,19 @@ class HfpSignalHandler:
       self.__hfp.enable()
 
   def inquiry_result(self, addr, devclass):
-    self.log().info('Discovered ' + devclass + ' ' + addr)
+    self.log().info('Discovered ' + str(devclass) + ' ' + str(addr))
 
-  def inquiry_state_changed(self, state):
-    pass
+  def inquiry_state_changed(self, began):
+    began_or_completed = ''
+
+    if began:
+      began_or_completed = 'began'
+      self.__hfp.scanning_began()
+    else:
+      began_or_completed = 'completed'
+      self.__hfp.scanning_completed()
+
+    self.log().info('Inquiry (scanning) ' + began_or_completed)
 
   def audio_gateway_added(self, audio_gateway_path):
     pass
@@ -172,14 +222,15 @@ class HfpSignalHandler:
     self.log().log(self.normalize_log_level(level), msg)
 
   def normalize_log_level(self, hfp_log_level):
-    # TODO: actually normalize hfp_log_level to
-    # CRITICAL  50
-    # ERROR 40
-    # WARNING 30
-    # INFO  20
-    # DEBUG 10
-    # NOTSET  0
-    return hfp_log_level
-
-  def log(self, className = 'HfpSignalHandler'):
-    return self.__hfp.log(className)
+    if hfp_log_level == 50:
+      return logging.CRITICAL
+    elif hfp_log_level == 40:
+      return logging.ERROR
+    elif hfp_log_level == 30:
+      return logging.WARNING
+    elif hfp_log_level == 20:
+      return logging.INFO
+    elif hfp_log_level == 10:
+      return logging.DEBUG
+    else:
+      return logging.DEBUG

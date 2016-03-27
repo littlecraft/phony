@@ -5,10 +5,10 @@
 PACKAGE_DIR=./.pip_packages
 VIRTUAL_BIN=$PACKAGE_DIR/bin
 
-virtualenv $PACKAGE_DIR
+virtualenv --system-site-packages $PACKAGE_DIR
 . $VIRTUAL_BIN/activate
 
-export PYTHONPATH=$PYTHONPATH:.
+export PYTHONPATH=$PYTHONPATH:./src
 
 #export PATH=$PATH:$VIRTUAL_BIN
 

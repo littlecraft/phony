@@ -5,3 +5,4 @@ llibspeex-dev
 libspeexdsp-dev
 libdbus-glib-dev
 python-dev
+python-gobject

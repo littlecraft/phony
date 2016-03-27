@@ -1,15 +1,15 @@
 import pytest
-import env
-from src.Hfp import Hfp
+import test
+from handset.hfp import Hfp
+
+test.setup()
 
 def test_Hfp_constructor_works():
-  hfp = Hfp(env.log)
+  with Hfp() as hfp:
+    pass
 
 def test_Hfp_starts_and_stops():
-  hfp = Hfp(env.log)
-  hfp.start()
-  hfp.stop()
-  # swith pytest.raises(Exception):
-
-def test_Hfp_listens_to_hfpd():
-  pass
+  with Hfp() as hfp:
+    hfp.start()
+    hfp.stop()
+    # with pytest.raises(Exception):
