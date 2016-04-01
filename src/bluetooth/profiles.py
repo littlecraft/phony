@@ -1,7 +1,8 @@
-import logging
 import dbus
 from dbus.mainloop.glib import DBusGMainLoop
-from base.classlogger import ClassLogger
+from base.log import ClassLogger
+from base.log import Levels
+from base.log import ScopedLogger
 
 class HandsFree(ClassLogger):
   #
@@ -223,14 +224,14 @@ class HfpSignalHandler(ClassLogger):
 
   def normalize_log_level(self, hfp_log_level):
     if hfp_log_level == 50:
-      return logging.CRITICAL
+      return Levels.CRITICAL
     elif hfp_log_level == 40:
-      return logging.ERROR
+      return Levels.ERROR
     elif hfp_log_level == 30:
-      return logging.WARNING
+      return Levels.WARNING
     elif hfp_log_level == 20:
-      return logging.INFO
+      return Levels.INFO
     elif hfp_log_level == 10:
-      return logging.DEBUG
+      return Levels.DEBUG
     else:
-      return logging.DEBUG
+      return Levels.DEFAULT

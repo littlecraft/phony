@@ -1,5 +1,5 @@
 import subprocess
-from base.classlogger import ClassLogger
+from base.log import ClassLogger
 
 class Controller(ClassLogger):
   __adapter = None

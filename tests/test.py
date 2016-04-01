@@ -1,9 +1,8 @@
-import logging
 import gobject
-import base.classlogger
+import base.log
 
 def setup():
-  base.classlogger.send_to_stdout(logging.DEBUG)
+  base.log.send_to_stdout(base.log.Levels.DEBUG)
 
 def main_loop():
   return gobject.MainLoop()

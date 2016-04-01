@@ -1,5 +1,5 @@
 import subprocess
-from base.classlogger import ClassLogger
+from base.log import ClassLogger
 
 class Bluez4(ClassLogger):
   __hci_device = None

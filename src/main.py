@@ -1,6 +1,5 @@
-import logging
 import gobject
-import base.classlogger
+import base.log
 import bluetooth.profiles
 import bluetooth.control
 import bluetooth.adapters
@@ -9,7 +8,7 @@ def main_loop():
   return gobject.MainLoop()
 
 if __name__ == '__main__':
-  base.classlogger.send_to_stdout()
+  base.log.send_to_stdout()
 
   bluez4 = bluetooth.adapters.Bluez4("hci1")
   control = bluetooth.control.Controller(bluez4)
