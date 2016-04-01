@@ -3,7 +3,7 @@ import dbus
 from dbus.mainloop.glib import DBusGMainLoop
 from base.classlogger import ClassLogger
 
-class Hfp(ClassLogger):
+class HandsFree(ClassLogger):
   #
   # These are the service and interface names exposed to dbus
   # by the hfpd (nohands) daemon.  @see hfconsole.in in the
@@ -38,7 +38,7 @@ class Hfp(ClassLogger):
   __hfp_signal_handler = None
 
   def __init__(self):
-    ClassLogger.__init__(self, __name__)
+    ClassLogger.__init__(self)
 
     main_loop = DBusGMainLoop()
     self.__dbus = dbus.SessionBus(mainloop = main_loop)
@@ -112,7 +112,7 @@ class Hfp(ClassLogger):
       self.fatal("Unsupported version of hfpd: %d" % version)
 
     self.__dbus_signal_handler = DbusSignalHandler(self, self.__dbus_controller)
-    self.__hfp_signal_handler = HfpSignalHandler(self, self.__hfpd_interface)
+    self.__hfp_signal_handler = HandsFreeSignalHandler(self, self.__hfpd_interface)
 
     self.log().info('Connected to Hfp service')
     self.__started = True
@@ -165,7 +165,7 @@ class DbusSignalHandler(ClassLogger):
   __hfp = None
 
   def __init__(self, hfp, dbus_controller):
-    ClassLogger.__init__(self, __name__)
+    ClassLogger.__init__(self)
 
     self.__hfp = hfp
 
@@ -180,7 +180,7 @@ class HfpSignalHandler(ClassLogger):
   __hfp = None
 
   def __init__(self, hfp, hfpd_interface):
-    ClassLogger.__init__(self, __name__)
+    ClassLogger.__init__(self)
 
     self.__hfp = hfp
 
