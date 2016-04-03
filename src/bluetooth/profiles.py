@@ -2,7 +2,7 @@ import dbus
 from dbus.mainloop.glib import DBusGMainLoop
 from base.log import ClassLogger
 from base.log import Levels
-from base.log import ScopedLogger
+from base.log import ClassMethodLogger
 
 class HandsFree(ClassLogger):
   #
@@ -113,7 +113,7 @@ class HandsFree(ClassLogger):
       self.fatal("Unsupported version of hfpd: %d" % version)
 
     self.__dbus_signal_handler = DbusSignalHandler(self, self.__dbus_controller)
-    self.__hfp_signal_handler = HandsFreeSignalHandler(self, self.__hfpd_interface)
+    self.__hfp_signal_handler = HfpSignalHandler(self, self.__hfpd_interface)
 
     self.log().info('Connected to Hfp service')
     self.__started = True
@@ -192,15 +192,18 @@ class HfpSignalHandler(ClassLogger):
     hfpd_interface.connect_to_signal('AudioGatewayRemoved', self.audio_gateway_removed)
     hfpd_interface.connect_to_signal('LogMessage', self.log_message)
 
+  @ClassLogger.event
   def system_state_changed(self, state):
     if not state:
       self.__hfp.disable()
     else:
       self.__hfp.enable()
 
+  @ClassLogger.event
   def inquiry_result(self, addr, devclass):
     self.log().info('Discovered ' + str(devclass) + ' ' + str(addr))
 
+  @ClassLogger.event
   def inquiry_state_changed(self, began):
     began_or_completed = ''
 
@@ -213,16 +216,18 @@ class HfpSignalHandler(ClassLogger):
 
     self.log().info('Inquiry (scanning) ' + began_or_completed)
 
+  @ClassLogger.event
   def audio_gateway_added(self, audio_gateway_path):
     pass
 
+  @ClassLogger.event
   def audio_gateway_removed(self, audio_gateway_path):
     pass
 
   def log_message(self, level, msg):
-    self.log().log(self.normalize_log_level(level), msg)
+    self.log().log(self.__normalize_log_level(level), msg)
 
-  def normalize_log_level(self, hfp_log_level):
+  def __normalize_log_level(self, hfp_log_level):
     if hfp_log_level == 50:
       return Levels.CRITICAL
     elif hfp_log_level == 40:

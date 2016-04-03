@@ -1,4 +1,4 @@
-import subprocess
+import base.execute
 from base.log import ClassLogger
 
 class Controller(ClassLogger):
@@ -11,14 +11,18 @@ class Controller(ClassLogger):
 
   def enable(self):
     self.log().info("Enabling bluetooth radio")
-    subprocess.check_output("rfkill unblock bluetooth", shell = True)
+    self.__exec("rfkill unblock bluetooth")
 
   def disable(self):
     self.log().info("Disabling bluetooth radio")
-    subprocess.check_output("rfkill block bluetooth", shell = True)
+    self.__exec("rfkill block bluetooth")
 
   def enable_visibility(self):
     self.__adapter.enable_visibility()
 
   def disable_visibility(self):
     self.__adapter.disable_visibility()
+
+  def __exec(self, command):
+    self.log().debug('Running: ' + command)
+    base.execute.privileged(command, shell = True)

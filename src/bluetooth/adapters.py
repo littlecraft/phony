@@ -1,4 +1,4 @@
-import subprocess
+import base.execute
 from base.log import ClassLogger
 
 class Bluez4(ClassLogger):
@@ -20,4 +20,4 @@ class Bluez4(ClassLogger):
   def __exec(self, fmt, *args):
     command = "hciconfig " + self.__hci_device + " " + fmt % args
     self.log().debug('Running: ' + command)
-    subprocess.check_output(command, shell = True)
+    base.execute.privileged(command, shell = True)

@@ -10,7 +10,7 @@ def main_loop():
 if __name__ == '__main__':
   base.log.send_to_stdout()
 
-  bluez4 = bluetooth.adapters.Bluez4("hci1")
+  bluez4 = bluetooth.adapters.Bluez4("hci0")
   control = bluetooth.control.Controller(bluez4)
 
   control.enable_visibility()
