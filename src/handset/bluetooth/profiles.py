@@ -1,8 +1,7 @@
 import dbus
+import handset.base.log
 from dbus.mainloop.glib import DBusGMainLoop
-from base.log import ClassLogger
-from base.log import Levels
-from base.log import ClassMethodLogger
+from handset.base.log import ClassLogger
 
 class HandsFree(ClassLogger):
   #
@@ -25,8 +24,6 @@ class HandsFree(ClassLogger):
   HFPD_EXACT_VERSION = 4
 
   __started = False
-  __bluetooth_available = False
-  __scanning = False
 
   __dbus = None
   __dbus_controller = None
@@ -118,39 +115,11 @@ class HandsFree(ClassLogger):
     self.log().info('Connected to Hfp service')
     self.__started = True
 
-  def stop(self):
-    self.stop_scan()
-
   def started(self):
     return self.__started
 
-  def enable(self):
-    self.log().info('Bluetooth Enabled')
-    self.__bluetooth_available = True
-
-  def disable(self):
-    self.log().info('Bluetooth Disabled')
-    self.__bluetooth_available = False
-
-  def enabled(self):
-    return self.__bluetooth_available
-
-  def scan(self):
-    if not self.__scanning:
-      self.__hfpd_interface.StartInquiry()
-
-  def stop_scan(self):
-    if self.__scanning:
-      self.__hfpd_interface.StopInquiry()
-
-  def scanning(self):
-    return self.__scanning
-
-  def scanning_began(self):
-    self.__scanning = True
-
-  def scanning_completed(self):
-    self.__scanning = False
+  def stop(self):
+    pass
 
   def hfpd(self, name = None, value = None):
     if (value == None):
@@ -186,41 +155,22 @@ class HfpSignalHandler(ClassLogger):
     self.__hfp = hfp
 
     hfpd_interface.connect_to_signal('SystemStateChanged', self.system_state_changed)
-    hfpd_interface.connect_to_signal('InquiryResult', self.inquiry_result)
-    hfpd_interface.connect_to_signal('InquiryStateChanged', self.inquiry_state_changed)
     hfpd_interface.connect_to_signal('AudioGatewayAdded', self.audio_gateway_added)
     hfpd_interface.connect_to_signal('AudioGatewayRemoved', self.audio_gateway_removed)
     hfpd_interface.connect_to_signal('LogMessage', self.log_message)
 
-  @ClassLogger.event
+  @ClassLogger.TraceAs.event
   def system_state_changed(self, state):
     if not state:
-      self.__hfp.disable()
+      self.log().info('Bluetooth disabled')
     else:
-      self.__hfp.enable()
+      self.log().info('Bluetooth enabled')
 
-  @ClassLogger.event
-  def inquiry_result(self, addr, devclass):
-    self.log().info('Discovered ' + str(devclass) + ' ' + str(addr))
-
-  @ClassLogger.event
-  def inquiry_state_changed(self, began):
-    began_or_completed = ''
-
-    if began:
-      began_or_completed = 'began'
-      self.__hfp.scanning_began()
-    else:
-      began_or_completed = 'completed'
-      self.__hfp.scanning_completed()
-
-    self.log().info('Inquiry (scanning) ' + began_or_completed)
-
-  @ClassLogger.event
+  @ClassLogger.TraceAs.event
   def audio_gateway_added(self, audio_gateway_path):
     pass
 
-  @ClassLogger.event
+  @ClassLogger.TraceAs.event
   def audio_gateway_removed(self, audio_gateway_path):
     pass
 
@@ -229,14 +179,14 @@ class HfpSignalHandler(ClassLogger):
 
   def __normalize_log_level(self, hfp_log_level):
     if hfp_log_level == 50:
-      return Levels.CRITICAL
+      return handset.base.log.Levels.CRITICAL
     elif hfp_log_level == 40:
-      return Levels.ERROR
+      return handset.base.log.Levels.ERROR
     elif hfp_log_level == 30:
-      return Levels.WARNING
+      return handset.base.log.Levels.WARNING
     elif hfp_log_level == 20:
-      return Levels.INFO
+      return handset.base.log.Levels.INFO
     elif hfp_log_level == 10:
-      return Levels.DEBUG
+      return handset.base.log.Levels.DEBUG
     else:
-      return Levels.DEFAULT
+      return handset.base.log.Levels.DEFAULT

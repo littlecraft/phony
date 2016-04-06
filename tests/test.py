@@ -1,8 +1,8 @@
 import gobject
-import base.log
+import handset.base.log
 
 def setup():
-  base.log.send_to_stdout(base.log.Levels.DEBUG)
+  handset.base.log.send_to_stdout(base.log.Levels.DEBUG)
 
 def main_loop():
   return gobject.MainLoop()

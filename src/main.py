@@ -1,20 +1,24 @@
 import gobject
-import base.log
-import bluetooth.profiles
-import bluetooth.control
-import bluetooth.adapters
+import handset.base.log
+import handset.bluetooth.profiles
+import handset.bluetooth.control
+import handset.bluetooth.adapters
 
 def main_loop():
   return gobject.MainLoop()
 
 if __name__ == '__main__':
-  base.log.send_to_stdout()
+  handset.base.log.send_to_stdout()
 
-  bluez4 = bluetooth.adapters.Bluez4("hci0")
-  control = bluetooth.control.Controller(bluez4)
+  hci_device = 'hci1'
 
-  control.enable_visibility()
+  with handset.bluetooth.adapters.Bluez4(hci_device) as bluez4, \
+       handset.bluetooth.control.Controller(bluez4) as control, \
+       handset.bluetooth.profiles.HandsFree() as hfp:
 
-  with bluetooth.profiles.HandsFree() as hfp:
+    control.start()
     hfp.start()
+
+    control.enable_visibility()
+
     main_loop().run()

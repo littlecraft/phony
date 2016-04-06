@@ -4,7 +4,7 @@ from functools import wraps
 def send_to_stdout(level = logging.DEBUG):
   logging.basicConfig(
     level = level,
-    format = '%(asctime)s.%(msecs)03d %(name)-30s %(levelname)-8s %(message)s',
+    format = '%(asctime)s.%(msecs)03d %(name)-60s %(levelname)-8s %(message)s',
     datefmt = '%Y-%m-%d %H:%M:%S'
   )
 
@@ -15,27 +15,6 @@ class Levels:
   INFO = logging.INFO
   DEBUG = logging.DEBUG
   DEFAULT = logging.DEBUG
-
-class NamedLogger(object):
-  __log_name = ""
-  __log = None
-  __level = Levels.DEFAULT
-
-  def __init__(self, name):
-    self.__log_name = name
-    self.__log = logging.getLogger(name)
-
-  def log(self):
-    return self.__log
-
-  def log_level(self, log_level = None):
-    if log_level != None:
-      self.__level = log_level
-
-    return self.__level
-
-  def log_name(self):
-    return self.__log_name
 
 class ScopedLogger(object):
   __scope = ""
@@ -53,23 +32,45 @@ class ScopedLogger(object):
   def __exit__(self, exc_type, exc_value, traceback):
     self.__instance.log().log(self.__level, "<- " + self.__scope)
 
-class ClassLogger(NamedLogger):
-  @staticmethod
-  def call(method):
-    def inner(*args, **kwargs):
-      instance = args[0]
-      with ScopedLogger(instance, method.__name__ + "()") as scope:
+class NamedLogger(object):
+  __log_name = ""
+  __log = None
+  __level = Levels.DEFAULT
+
+  class TraceAs:
+    @staticmethod
+    def call(method):
+      def inner(*args, **kwargs):
+        instance = args[0]
+        with ScopedLogger(instance, method.__name__ + "()") as scope:
+          method(*args, **kwargs)
+      return inner
+
+    @staticmethod
+    def event(method):
+      def inner(*args, **kwargs):
+        instance = args[0]
+        instance.log().log(instance.log_level(), "** " + method.__name__ + " **")
         method(*args, **kwargs)
-    return inner
+      return inner
 
-  @staticmethod
-  def event(method):
-    def inner(*args, **kwargs):
-      instance = args[0]
-      instance.log().log(instance.log_level(), "* " + method.__name__)
-      method(*args, **kwargs)
-    return inner
+  def __init__(self, name):
+    self.__log_name = name
+    self.__log = logging.getLogger(name)
 
+  def log(self):
+    return self.__log
+
+  def log_level(self, log_level = None):
+    if log_level != None:
+      self.__level = log_level
+
+    return self.__level
+
+  def log_name(self):
+    return self.__log_name
+
+class ClassLogger(NamedLogger):
   def __init__(self):
     name = self.__module__ + "." + type(self).__name__
     NamedLogger.__init__(self, name)
