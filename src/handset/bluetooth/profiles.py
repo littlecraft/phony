@@ -45,7 +45,8 @@ class HandsFree(ClassLogger):
     return self
 
   def __exit__(self, exc_type, exc_value, traceback):
-    self.stop()
+    pass
+    #self.stop()
 
   def start(self):
     try:

@@ -10,15 +10,14 @@ def main_loop():
 if __name__ == '__main__':
   handset.base.log.send_to_stdout()
 
-  hci_device = 'hci1'
+  hci_device = 'hci0'
+  name = "Ol' Timer"
 
   with handset.bluetooth.adapters.Bluez4(hci_device) as bluez4, \
-       handset.bluetooth.control.Controller(bluez4) as control, \
-       handset.bluetooth.profiles.HandsFree() as hfp:
+       handset.bluetooth.profiles.HandsFree() as profile, \
+       handset.bluetooth.control.Controller(bluez4, profile) as control:
 
-    control.start()
-    hfp.start()
-
+    control.start(name)
     control.enable_visibility()
 
     main_loop().run()
