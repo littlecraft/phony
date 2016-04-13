@@ -32,7 +32,7 @@ class Bluez4(ClassLogger):
     pass
     #self.stop()
 
-  def start(self, name):
+  def start(self, name, pincode):
     if self.__started:
       return
 
@@ -61,7 +61,7 @@ class Bluez4(ClassLogger):
     capability = 'KeyboardDisplay'
     path = '/test/agent'
     self.__agent = Bluez4PermissibleAgent(self, path, capability)
-    self.__agent.set_pincode(1234);
+    self.__agent.set_pincode(pincode);
 
     self.set_property('Name', name)
 

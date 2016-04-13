@@ -12,12 +12,13 @@ if __name__ == '__main__':
 
   hci_device = 'hci0'
   name = "Ol' Timer"
+  pincode = 1234
 
   with handset.bluetooth.adapters.Bluez4(hci_device) as bluez4, \
        handset.bluetooth.profiles.HandsFree() as profile, \
        handset.bluetooth.control.Controller(bluez4, profile) as control:
 
-    control.start(name)
+    control.start(name, pincode)
     control.enable_visibility()
 
     main_loop().run()
