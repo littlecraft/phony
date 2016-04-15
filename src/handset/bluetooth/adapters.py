@@ -8,6 +8,7 @@ class Bluez4(ClassLogger):
   DBUS_BUS_OBJECT = '/'
   DBUS_MANAGER_INTERFACE = 'org.bluez.Manager'
   DBUS_ADAPTER_INTERFACE = 'org.bluez.Adapter'
+  DBUS_DEVICE_INTERFACE = 'org.bluez.Device'
 
   __bus = None
 
@@ -30,8 +31,8 @@ class Bluez4(ClassLogger):
 
   def __exit__(self, exc_type, exc_value, traceback):
     pass
-    #self.stop()
 
+  @ClassLogger.TraceAs.call(with_arguments = False)
   def start(self, name, pincode):
     if self.__started:
       return
@@ -58,9 +59,8 @@ class Bluez4(ClassLogger):
     )
     self.__adapter_signal_handler = Bluez4AdapterSignalHandler(self)
 
-    capability = 'KeyboardDisplay'
-    path = '/test/agent'
-    self.__agent = Bluez4PermissibleAgent(self, path, capability)
+    agent_path = '/farmfone/agent'
+    self.__agent = Bluez4PermissibleAgent(self, agent_path)
     self.__agent.set_pincode(pincode);
 
     self.set_property('Name', name)
@@ -78,6 +78,15 @@ class Bluez4(ClassLogger):
   def stop(self):
     if self.visible():
       self.disable_visibility()
+
+  def bound_devices(self):
+    devices = []
+    for device_path in self.adapter().ListDevices():
+      device = self.get_device(device_path)
+      if (device.get_property('Paired')):
+        devices.append(device)
+
+    return devices
 
   def enable(self):
     self.set_property('Powered', True)
@@ -126,11 +135,16 @@ class Bluez4(ClassLogger):
     properties = self.__adapter.GetProperties()
     return properties[name]
 
-def create_device_reply(device):
-  pass
-
-def create_device_error(error):
-  pass
+  def get_device(self, device_path):
+    return Bluez4Device(
+      dbus.Interface(
+        self.__bus.get_object(
+          self.DBUS_SERVICE_NAME,
+          device_path
+        ),
+        dbus_interface = self.DBUS_DEVICE_INTERFACE
+      )
+    )
 
 class Bluez4AdapterSignalHandler(ClassLogger):
   __bluez4 = None
@@ -143,38 +157,55 @@ class Bluez4AdapterSignalHandler(ClassLogger):
     adapter.connect_to_signal('PropertyChanged', self.property_changed)
     adapter.connect_to_signal('DeviceFound', self.device_found)
     adapter.connect_to_signal('DeviceDisappeared', self.device_disappeared)
-    adapter.connect_to_signal('DeviceCreate', self.device_created)
+    adapter.connect_to_signal('DeviceCreated', self.device_created)
     adapter.connect_to_signal('DeviceRemoved', self.device_removed)
 
+  #@ClassLogger.TraceAs.event()
   def property_changed(self, name, value):
-    self.log().debug('PropertyChange: %s = "%s"' % (name, value))
+    pass
 
+  @ClassLogger.TraceAs.event()
   def device_found(self, address, properties):
-    self.log().debug('DeviceFound: ' + str(address))
+    pass
+    #try:
+    #  self.__bluez4.adapter().CreateDevice(address)
+    #except dbus.DBusException, ex:
+    #  if ex.get_dbus_name() != 'org.bluez.Error.AlreadyExists':
+    #    self.log().error('Unable to create device for ' + str(address) + str(ex))
+    #  else:
+    #    self.log().debug('Device already exists for ' + str(address))
+    #self.__bluez4.adapter().CreatePairedDevice(
+    #  str(address),
+    #  self.__bluez4.agent().path(),
+    #  self.__bluez4.agent().capability(),
+    #  timeout = 60000,
+    #  reply_handler = create_device_reply,
+    #  error_handler = create_device_error
+    #)
 
-    self.__bluez4.adapter().CreatePairedDevice(
-      str(address),
-      self.__bluez4.agent().path(),
-      self.__bluez4.agent().capability(),
-      timeout = 60000,
-      reply_handler = create_device_reply,
-      error_handler = create_device_error
-    )
+  #def create_device_reply(device):
+  #  pass
 
-  @ClassLogger.TraceAs.event
+  #def create_device_error(error):
+  #  pass
+
+  @ClassLogger.TraceAs.event()
   def device_disappeared(self, address):
     pass
 
-  @ClassLogger.TraceAs.event
+  @ClassLogger.TraceAs.event()
   def device_created(self, device):
     pass
 
-  @ClassLogger.TraceAs.event
+  @ClassLogger.TraceAs.event()
   def device_removed(self, device):
     pass
 
 class Rejected(dbus.DBusException):
   _dbus_error_name = "org.bluez.Error.Rejected"
+
+# except dbus.DbusException, ex:
+#   if ex.get_dbus_name() == 'path.to.dbus.exception.name':
 
 class Bluez4PermissibleAgent(dbus.service.Object, ClassLogger):
   __passcode = None
@@ -182,14 +213,14 @@ class Bluez4PermissibleAgent(dbus.service.Object, ClassLogger):
   __path = None
   __capability = None
 
-  def __init__(self, bluez4, path, capability):
+  def __init__(self, bluez4, path):
     ClassLogger.__init__(self)
     dbus.service.Object.__init__(self, bluez4.bus(), path)
 
     self.__path = path
-    self.__capability = capability
+    self.__capability = 'NoInputNoOutput'
 
-    bluez4.adapter().RegisterAgent(path, capability)
+    bluez4.adapter().RegisterAgent(path, self.__capability)
 
   def set_pincode(self, pincode):
     self.__pincode = pincode
@@ -210,9 +241,6 @@ class Bluez4PermissibleAgent(dbus.service.Object, ClassLogger):
   @dbus.service.method("org.bluez.Agent", in_signature="os", out_signature="")
   def Authorize(self, device, uuid):
     self.log().debug("Authorize (%s, %s)" % (device, uuid))
-    #if (authorize == "yes"):
-    #  return
-    #raise Rejected("Connection rejected by user")
 
   @dbus.service.method("org.bluez.Agent", in_signature="o", out_signature="s")
   def RequestPinCode(self, device):
@@ -235,19 +263,23 @@ class Bluez4PermissibleAgent(dbus.service.Object, ClassLogger):
   @dbus.service.method("org.bluez.Agent", in_signature="ou", out_signature="")
   def RequestConfirmation(self, device, passkey):
     self.log().debug("RequestConfirmation (%s, %06d)" % (device, passkey))
-    #confirm = ask("Confirm passkey (yes/no): ")
-    #if (confirm == "yes"):
-    #  return
-    #raise Rejected("Passkey doesn't match")
 
   @dbus.service.method("org.bluez.Agent", in_signature="s", out_signature="")
   def ConfirmModeChange(self, mode):
     self.log().debug("ConfirmModeChange (%s)" % (mode))
-    #authorize = ask("Authorize mode change (yes/no): ")
-    #if (authorize == "yes"):
-    #  return
-    #raise Rejected("Mode change by user")
 
   @dbus.service.method("org.bluez.Agent", in_signature="", out_signature="")
   def Cancel(self):
     self.log().debug("Cancel")
+
+class Bluez4Device(ClassLogger):
+  __device = None
+
+  def __init__(self, device):
+    self.__device = device
+
+  def get_property(self, name):
+    return self.__device.GetProperties()[name]
+
+  def __repr__(self):
+    return self.get_property('Address')

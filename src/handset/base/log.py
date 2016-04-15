@@ -39,20 +39,56 @@ class NamedLogger(object):
 
   class TraceAs:
     @staticmethod
-    def call(method):
-      def inner(*args, **kwargs):
-        instance = args[0]
-        with ScopedLogger(instance, method.__name__ + "()") as scope:
-          method(*args, **kwargs)
-      return inner
+    def call(with_arguments = True, log_level = Levels.DEFAULT):
+      def decorator(method):
+        def inner(*args, **kwargs):
+          instance = args[0]
+
+          if with_arguments:
+            strung = NamedLogger.TraceAs.stringify(args[1:])
+          else:
+            strung = ''
+
+          if log_level == Levels.DEFAULT:
+            level = instance.log_level()
+          else:
+            level = log_level
+
+          name = method.__name__ + '(' + strung + ')'
+          with ScopedLogger(instance, name, log_level) as scope:
+            method(*args, **kwargs)
+        return inner
+      return decorator
 
     @staticmethod
-    def event(method):
-      def inner(*args, **kwargs):
-        instance = args[0]
-        instance.log().log(instance.log_level(), "** " + method.__name__ + " **")
-        method(*args, **kwargs)
-      return inner
+    def event(with_arguments = True, log_level = Levels.DEFAULT):
+      def decorator(method):
+        def inner(*args, **kwargs):
+          instance = args[0]
+
+          if with_arguments:
+            strung = NamedLogger.TraceAs.stringify(args[1:])
+          else:
+            strung = ''
+
+          if log_level == Levels.DEFAULT:
+            level = instance.log_level()
+          else:
+            level = log_level
+
+          name = '** ' + method.__name__ + '(' + strung + ') **'
+          instance.log().log(level, name)
+          method(*args, **kwargs)
+        return inner
+      return decorator
+
+    @staticmethod
+    def stringify(args):
+      val = ', '.join(filter(None, map(str, args)))
+      if len(val) > 40:
+        return val[:40] + '...'
+      else:
+        return val
 
   def __init__(self, name):
     self.__log_name = name

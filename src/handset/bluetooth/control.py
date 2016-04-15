@@ -17,13 +17,14 @@ class Controller(ClassLogger):
   def __exit__(self, exc_type, exc_value, traceback):
     self.stop()
 
+  @ClassLogger.TraceAs.call(with_arguments = False)
   def start(self, name, pincode):
     if self.__started:
       return
 
     self.enable()
     self.__adapter.start(name, pincode)
-    self.__profile.start()
+    #self.__profile.start()
 
   def stop(self):
     if self.__started:

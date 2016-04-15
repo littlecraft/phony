@@ -35,6 +35,8 @@ class HandsFree(ClassLogger):
   __dbus_signal_handler = None
   __hfp_signal_handler = None
 
+  __audio_gateways = []
+
   def __init__(self):
     ClassLogger.__init__(self)
 
@@ -48,6 +50,7 @@ class HandsFree(ClassLogger):
     pass
     #self.stop()
 
+  @ClassLogger.TraceAs.call()
   def start(self):
     try:
       self.__dbus_controller = dbus.Interface(
@@ -105,78 +108,105 @@ class HandsFree(ClassLogger):
         '\"hfpd/hfpd\"' % str(ex)
       )
 
-    version = self.hfpd('Version')
+    version = self.get_property('Version')
     if (version != self.HFPD_EXACT_VERSION):
-      # :-(
       self.fatal("Unsupported version of hfpd: %d" % version)
 
-    self.__dbus_signal_handler = DbusSignalHandler(self, self.__dbus_controller)
-    self.__hfp_signal_handler = HfpSignalHandler(self, self.__hfpd_interface)
+    self.__dbus_signal_handler = HfpDbusSignalHandler(self)
+    self.__hfp_signal_handler = HfpSignalHandler(self)
 
     self.log().info('Connected to Hfp service')
+
+    self.hfpd().Start()
+
     self.__started = True
 
   def started(self):
     return self.__started
 
+  @ClassLogger.TraceAs.call()
   def stop(self):
     pass
 
-  def hfpd(self, name = None, value = None):
-    if (value == None):
-      return self.__hfpd_properties.Get(self.HFPD_HANDSFREE_INTERFACE_NAME, name)
-    else:
-      self.__hfpd_properties.Set(self.HFPD_HANDSFREE_INTERFACE_NAME, name, value)
+  @ClassLogger.TraceAs.call()
+  def attach(self, address):
+    try:
+      # AudioGateway is constructed via AudioGatewayAdded signal handler
+      audio_gateway_path = self.hfpd().AddDevice(address, False)
+    except msg:
+      self.log().error('Could not attach device ' + str(address))
+
+  def add_audio_gateway(self, audio_gateway_path):
+    if audio_gateway_path not in self.__audio_gateways:
+      self.__audio_gateways[audio_gateway_path] = \
+        AudioGateway(self, audio_gateway_path)
+
+  def remove_audio_gateway(self, audio_gateway_path):
+    if audio_gateway_path in self.__audio_gateways:
+      del self.__audio_gateways[audio_gateway_path]
+
+  def get_property(self, name):
+    return self.__hfpd_properties.Get(self.HFPD_HANDSFREE_INTERFACE_NAME, name)
+
+  def set_property(self, name, value):
+    self.__hfpd_properties.Set(self.HFPD_HANDSFREE_INTERFACE_NAME, name, value)
+
+  def hfpd(self):
+    return self.__hfpd_interface
+
+  def bus(self):
+    return self.__dbus_controller
+
+  def session(self):
+    return self.__dbus
 
   def fatal(self, msg):
     self.log().error(msg)
     raise Exception(msg)
 
-class DbusSignalHandler(ClassLogger):
+class HfpDbusSignalHandler(ClassLogger):
   __hfp = None
 
-  def __init__(self, hfp, dbus_controller):
+  def __init__(self, hfp):
     ClassLogger.__init__(self)
 
     self.__hfp = hfp
-
-    dbus_controller.connect_to_signal("NameOwnerChanged", self.name_owner_changed)
+    hfp.bus().connect_to_signal("NameOwnerChanged", self.name_owner_changed)
 
   def name_owner_changed(self, name, old_owner, new_owner):
     if name != self.__hfp.HFPD_SERVICE_NAME or new_owner != '':
       return
-    self.__hfp.disable()
+
+    self.log().debug('hfpd service disappeared, stopping');
+    self.__hfp.stop()
 
 class HfpSignalHandler(ClassLogger):
   __hfp = None
 
-  def __init__(self, hfp, hfpd_interface):
+  def __init__(self, hfp):
     ClassLogger.__init__(self)
 
     self.__hfp = hfp
 
-    hfpd_interface.connect_to_signal('SystemStateChanged', self.system_state_changed)
-    hfpd_interface.connect_to_signal('AudioGatewayAdded', self.audio_gateway_added)
-    hfpd_interface.connect_to_signal('AudioGatewayRemoved', self.audio_gateway_removed)
-    hfpd_interface.connect_to_signal('LogMessage', self.log_message)
+    hfp.hfpd().connect_to_signal('SystemStateChanged', self.system_state_changed)
+    hfp.hfpd().connect_to_signal('AudioGatewayAdded', self.audio_gateway_added)
+    hfp.hfpd().connect_to_signal('AudioGatewayRemoved', self.audio_gateway_removed)
+    hfp.hfpd().connect_to_signal('LogMessage', self.log_message)
 
-  @ClassLogger.TraceAs.event
+  @ClassLogger.TraceAs.event()
   def system_state_changed(self, state):
-    if not state:
-      self.log().info('Bluetooth disabled')
-    else:
-      self.log().info('Bluetooth enabled')
+    pass
 
-  @ClassLogger.TraceAs.event
+  @ClassLogger.TraceAs.event()
   def audio_gateway_added(self, audio_gateway_path):
-    pass
+    self.__hfp.add_audio_gateway(audio_gateway_path)
 
-  @ClassLogger.TraceAs.event
+  @ClassLogger.TraceAs.event()
   def audio_gateway_removed(self, audio_gateway_path):
-    pass
+    self.__hfp.remove_audio_gateway(audio_gateway_path)
 
   def log_message(self, level, msg):
-    self.log().log(self.__normalize_log_level(level), msg)
+    self.log().log(self.__normalize_log_level(level), 'HFPD: ' +  msg)
 
   def __normalize_log_level(self, hfp_log_level):
     if hfp_log_level == 50:
@@ -191,3 +221,27 @@ class HfpSignalHandler(ClassLogger):
       return handset.base.log.Levels.DEBUG
     else:
       return handset.base.log.Levels.DEFAULT
+
+class AudioGateway(ClassLogger):
+  __ag_interface = None
+  __ag_properties = None
+  __path = None
+
+  def __init__(self, hfp, audio_gateway_path):
+    self.__path = audio_gateway_path
+
+    self.__ag_interface = dbus.Interface(
+      hfp.session().get_object(
+        hfp.HFPD_SERVICE_NAME,
+        audio_gateway_path
+      ),
+      dbus_interface = hfp.HFPD_AUDIOGATEWAY_INTERFACE_NAME
+    )
+
+    self.__ag_properties = dbus.Interface(
+      hfp.session().get_object(
+        hfp.HFPD_SERVICE_NAME,
+        audio_gateway_path
+      ),
+      dbus_interface = hfp.DBUS_INTERFACE_PROPERTIES
+    )
