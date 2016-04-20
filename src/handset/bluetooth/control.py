@@ -11,6 +11,8 @@ class Controller(ClassLogger):
     self.__adapter = adapter
     self.__profile = profile
 
+    adapter.on_bound_device_changed(self.__bound_device_changed)
+
   def __enter__(self):
     return self
 
@@ -23,8 +25,8 @@ class Controller(ClassLogger):
       return
 
     self.enable()
+    self.__profile.start()
     self.__adapter.start(name, pincode)
-    #self.__profile.start()
 
   def stop(self):
     if self.__started:
@@ -44,6 +46,10 @@ class Controller(ClassLogger):
 
   def disable_visibility(self):
     self.__adapter.enable_visibility()
+
+  @ClassLogger.TraceAs.event()
+  def __bound_device_changed(self, address):
+    self.__profile.attach(address)
 
   def __exec(self, command):
     self.log().debug('Running: ' + command)

@@ -20,6 +20,10 @@ class Bluez4(ClassLogger):
 
   __agent = None
 
+  __bound_device_address = None
+
+  __on_bound_device_changed = []
+
   __started = False
 
   def __init__(self, hci_device):
@@ -63,61 +67,47 @@ class Bluez4(ClassLogger):
     self.__agent = Bluez4PermissibleAgent(self, agent_path)
     self.__agent.set_pincode(pincode);
 
-    self.set_property('Name', name)
+    self.__set_property('Name', name)
 
     self.__started = True
 
-    self.show_device_properties()
-
-  def show_device_properties(self):
-    self.log().debug('Adapter device id: ' + self.device_id())
-    self.log().debug('Adapter name: ' + self.name())
-    self.log().debug('Adapter address: ' + self.address())
-    self.log().debug('Adapter class: ' + str(self.get_property('Class')))
+    self.__show_device_properties()
 
   def stop(self):
     if self.visible():
       self.disable_visibility()
 
-  def bound_devices(self):
-    devices = []
-    for device_path in self.adapter().ListDevices():
-      device = self.get_device(device_path)
-      if (device.get_property('Paired')):
-        devices.append(device)
-
-    return devices
-
   def enable(self):
-    self.set_property('Powered', True)
+    self.__set_property('Powered', True)
 
   def disable(self):
-    self.set_property('Powered', False)
+    self.__set_property('Powered', False)
 
   def enabled(self):
-    return set.get_property('Powered')
+    return self.__get_property('Powered')
 
   def enable_visibility(self):
-    self.set_property('Discoverable', True)
-    self.set_property('Pairable', True)
+    self.__set_property('Discoverable', True)
+    self.__set_property('Pairable', True)
     self.__adapter.StartDiscovery()
 
   def disable_visibility(self):
-    self.set_property('Discoverable', True)
-    self.set_property('Pairable', True)
+    self.__set_property('Discoverable', True)
+    self.__set_property('Pairable', True)
     self.__adapter.StopDiscovery()
 
   def visible(self):
-    return self.get_property('Discoverable') and self.get_property('Pairable')
+    return self.__get_property('Discoverable') and self.__get_property('Pairable')
 
-  def device_id(self):
-    return self.__adapter_path
+  def on_bound_device_changed(self, listener):
+    self.__on_bound_device_changed.append(listener)
 
-  def name(self):
-    return self.get_property('Name')
+  def bound_device_changed(self, address):
+    if address != self.__bound_device_address:
+      self.__bound_device_address = address
 
-  def address(self):
-    return self.get_property('Address')
+      for listener in self.__on_bound_device_changed:
+        listener(str(address))
 
   def agent(self):
     return self.__agent
@@ -128,14 +118,23 @@ class Bluez4(ClassLogger):
   def bus(self):
     return self.__bus
 
-  def set_property(self, name, value):
+  def __set_property(self, name, value):
     self.__adapter.SetProperty(name, value)
 
-  def get_property(self, name):
+  def __get_property(self, name):
     properties = self.__adapter.GetProperties()
     return properties[name]
 
-  def get_device(self, device_path):
+  def __bound_devices(self):
+    devices = []
+    for device_path in self.adapter().ListDevices():
+      device = self.__get_device(device_path)
+      if (device.__get_property('Paired')):
+        devices.append(device)
+
+    return devices
+
+  def __get_device(self, device_path):
     return Bluez4Device(
       dbus.Interface(
         self.__bus.get_object(
@@ -146,38 +145,43 @@ class Bluez4(ClassLogger):
       )
     )
 
+  def __show_device_properties(self):
+    self.log().debug('Adapter device id: ' + self.__adapter_path)
+    self.log().debug('Adapter name: ' + self.__get_property('Name'))
+    self.log().debug('Adapter address: ' + self.__get_property('Address'))
+    self.log().debug('Adapter class: ' + str(self.__get_property('Class')))
+
 class Bluez4AdapterSignalHandler(ClassLogger):
-  __bluez4 = None
+  __adapter = None
 
-  def __init__(self, bluez4):
+  def __init__(self, adapter):
     ClassLogger.__init__(self)
-    self.__bluez4 = bluez4
+    self.__adapter = adapter
 
-    adapter = bluez4.adapter()
-    adapter.connect_to_signal('PropertyChanged', self.property_changed)
-    adapter.connect_to_signal('DeviceFound', self.device_found)
-    adapter.connect_to_signal('DeviceDisappeared', self.device_disappeared)
-    adapter.connect_to_signal('DeviceCreated', self.device_created)
-    adapter.connect_to_signal('DeviceRemoved', self.device_removed)
+    adapter_obj = adapter.adapter()
+    adapter_obj.connect_to_signal('PropertyChanged', self.property_changed)
+    adapter_obj.connect_to_signal('DeviceFound', self.device_found)
+    adapter_obj.connect_to_signal('DeviceDisappeared', self.device_disappeared)
+    adapter_obj.connect_to_signal('DeviceCreated', self.device_created)
+    adapter_obj.connect_to_signal('DeviceRemoved', self.device_removed)
 
-  #@ClassLogger.TraceAs.event()
   def property_changed(self, name, value):
     pass
 
   @ClassLogger.TraceAs.event()
   def device_found(self, address, properties):
-    pass
+    self.__adapter.bound_device_changed(address)
     #try:
-    #  self.__bluez4.adapter().CreateDevice(address)
+    #  self.__adapter.adapter().CreateDevice(address)
     #except dbus.DBusException, ex:
     #  if ex.get_dbus_name() != 'org.bluez.Error.AlreadyExists':
     #    self.log().error('Unable to create device for ' + str(address) + str(ex))
     #  else:
     #    self.log().debug('Device already exists for ' + str(address))
-    #self.__bluez4.adapter().CreatePairedDevice(
+    #self.__adapter.adapter().CreatePairedDevice(
     #  str(address),
-    #  self.__bluez4.agent().path(),
-    #  self.__bluez4.agent().capability(),
+    #  self.__adapter.agent().path(),
+    #  self.__adapter.agent().capability(),
     #  timeout = 60000,
     #  reply_handler = create_device_reply,
     #  error_handler = create_device_error
@@ -213,14 +217,14 @@ class Bluez4PermissibleAgent(dbus.service.Object, ClassLogger):
   __path = None
   __capability = None
 
-  def __init__(self, bluez4, path):
+  def __init__(self, adapter, path):
     ClassLogger.__init__(self)
-    dbus.service.Object.__init__(self, bluez4.bus(), path)
+    dbus.service.Object.__init__(self, adapter.bus(), path)
 
     self.__path = path
     self.__capability = 'NoInputNoOutput'
 
-    bluez4.adapter().RegisterAgent(path, self.__capability)
+    adapter.adapter().RegisterAgent(path, self.__capability)
 
   def set_pincode(self, pincode):
     self.__pincode = pincode
@@ -278,8 +282,8 @@ class Bluez4Device(ClassLogger):
   def __init__(self, device):
     self.__device = device
 
-  def get_property(self, name):
+  def __get_property(self, name):
     return self.__device.GetProperties()[name]
 
   def __repr__(self):
-    return self.get_property('Address')
+    return self.__get_property('Address')

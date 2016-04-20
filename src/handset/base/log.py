@@ -41,49 +41,49 @@ class NamedLogger(object):
     @staticmethod
     def call(with_arguments = True, log_level = Levels.DEFAULT):
       def decorator(method):
-        def inner(*args, **kwargs):
+        def call_wrapper(*args, **kwargs):
           instance = args[0]
 
           if with_arguments:
-            strung = NamedLogger.TraceAs.stringify(args[1:])
+            displayable_args = NamedLogger.TraceAs.__pretty(args[1:])
           else:
-            strung = ''
+            displayable_args = ''
 
           if log_level == Levels.DEFAULT:
             level = instance.log_level()
           else:
             level = log_level
 
-          name = method.__name__ + '(' + strung + ')'
+          name = method.__name__ + '(' + displayable_args + ')'
           with ScopedLogger(instance, name, log_level) as scope:
             method(*args, **kwargs)
-        return inner
+        return call_wrapper
       return decorator
 
     @staticmethod
     def event(with_arguments = True, log_level = Levels.DEFAULT):
       def decorator(method):
-        def inner(*args, **kwargs):
+        def call_wrapper(*args, **kwargs):
           instance = args[0]
 
           if with_arguments:
-            strung = NamedLogger.TraceAs.stringify(args[1:])
+            displayable_args = NamedLogger.TraceAs.__pretty(args[1:])
           else:
-            strung = ''
+            displayable_args = ''
 
           if log_level == Levels.DEFAULT:
             level = instance.log_level()
           else:
             level = log_level
 
-          name = '** ' + method.__name__ + '(' + strung + ') **'
+          name = '** ' + method.__name__ + '(' + displayable_args + ') **'
           instance.log().log(level, name)
           method(*args, **kwargs)
-        return inner
+        return call_wrapper
       return decorator
 
     @staticmethod
-    def stringify(args):
+    def __pretty(args):
       val = ', '.join(filter(None, map(str, args)))
       if len(val) > 40:
         return val[:40] + '...'
