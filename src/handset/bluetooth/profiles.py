@@ -138,8 +138,9 @@ class HandsFree(ClassLogger):
 
   def add_audio_gateway(self, audio_gateway_path):
     if str(audio_gateway_path) not in self.__audio_gateways:
-      self.__audio_gateways[str(audio_gateway_path)] = \
-        AudioGateway(self, audio_gateway_path)
+      ag = HfpAudioGateway(self, audio_gateway_path)
+      ag.start()
+      self.__audio_gateways[str(audio_gateway_path)] = ag
 
   def remove_audio_gateway(self, audio_gateway_path):
     if audio_gateway_path in self.__audio_gateways:
@@ -222,12 +223,39 @@ class HfpSignalHandler(ClassLogger):
     else:
       return handset.base.log.Levels.DEFAULT
 
-class AudioGateway(ClassLogger):
+class HfpAudioGateway(ClassLogger):
+  # @see nohands/hfpd/proto.h
+  class CallState:
+    INVALID = 0
+    IDLE = 1
+    CONNECTING = 2
+    ESTABLISHED = 3
+    WAITING = 4
+    ESTABLISHED_WAITING = 5
+
+  class GatewayState:
+    INVALID = 0
+    DESTROYED = 1
+    DISCONNECTED = 2
+    CONNECTING = 3
+    CONNECTED = 4
+
+  class AudioState:
+    INVALID = 0
+    DISCONNECTED = 1
+    CONNECTING = 2
+    CONNECTED = 3
+
+  __hfp = None
   __ag_interface = None
   __ag_properties = None
   __path = None
 
   def __init__(self, hfp, audio_gateway_path):
+    ClassLogger.__init__(self)
+
+    self.__hfp = hfp
+
     self.__path = audio_gateway_path
 
     self.__ag_interface = dbus.Interface(
@@ -245,3 +273,88 @@ class AudioGateway(ClassLogger):
       ),
       dbus_interface = hfp.DBUS_INTERFACE_PROPERTIES
     )
+
+    self.__ag_interface.connect_to_signal('StateChanged',
+      self.__gateway_state_changed)
+    self.__ag_interface.connect_to_signal('CallStateChanged',
+      self.__call_state_changed)
+    self.__ag_interface.connect_to_signal('AudioStateChanged',
+      self.__audio_state_changed)
+    self.__ag_interface.connect_to_signal('AutoReconnectChanged',
+      self.__auto_reconnect_changed)
+    self.__ag_interface.connect_to_signal('Ring',
+      self.__ring_notify)
+
+  @ClassLogger.TraceAs.call()
+  def connect(self):
+    self.__ag_interface.Connect()
+
+  @ClassLogger.TraceAs.call()
+  def disconnect(self):
+    self.__ag_interface.Disconnect()
+
+  @ClassLogger.TraceAs.call()
+  def start(self):
+    self.connect()
+
+  @ClassLogger.TraceAs.event()
+  def answer(self):
+    self.__ag_interface.Answer(
+      reply_handler = lambda : None,
+      error_handler = self.__failure
+    )
+
+  @ClassLogger.TraceAs.event()
+  def hangup(self):
+    self.__ag_interface.HangUp(
+      reply_handler = lambda : None,
+      error_handler = self.__failure
+    )
+
+  def enable_auto_reconnect(self):
+    self.set_property('AutoReconnect', dbus.Boolean(True))
+
+  def disable_auto_reconnect(self):
+    self.set_property('AutoReconnect', dbus.Boolean(False))
+
+  def auto_reconnect_enabled(self):
+    bool(self.get_property('AutoReconnect'))
+
+  def get_property(self, name):
+    return self.__ag_properties.Set(
+      self.__hfp.HFPD_AUDIOGATEWAY_INTERFACE_NAME,
+      name
+    )
+
+  def set_property(self, name, value):
+    return self.__ag_properties.Set(
+      self.__hfp.HFPD_AUDIOGATEWAY_INTERFACE_NAME,
+      name,
+      value
+    )
+
+  @ClassLogger.TraceAs.event()
+  def __gateway_state_changed(self, state, voluntary):
+    state = int(state)
+    if state == self.GatewayState.CONNECTED:
+      self.enable_auto_reconnect()
+
+  @ClassLogger.TraceAs.event()
+  def __call_state_changed(self, state):
+    pass
+
+  @ClassLogger.TraceAs.event()
+  def __audio_state_changed(self, state):
+    pass
+
+  @ClassLogger.TraceAs.event()
+  def __auto_reconnect_changed(self, enabled):
+    pass
+
+  @ClassLogger.TraceAs.event()
+  def __ring_notify(self, number, type, subaddr, satype, phonebook_entry):
+    pass
+
+  @ClassLogger.TraceAs.event()
+  def __failure(self, reason):
+    pass

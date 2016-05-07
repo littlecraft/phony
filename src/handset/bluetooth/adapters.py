@@ -102,12 +102,22 @@ class Bluez4(ClassLogger):
   def on_bound_device_changed(self, listener):
     self.__on_bound_device_changed.append(listener)
 
-  def bound_device_changed(self, address):
-    if address != self.__bound_device_address:
-      self.__bound_device_address = address
+  def bound_device_address(self):
+    return self.__bound_device_address
 
-      for listener in self.__on_bound_device_changed:
-        listener(str(address))
+  @ClassLogger.TraceAs.call()
+  def bind_device(self, address):
+    self.__bound_device_address = address
+
+    for listener in self.__on_bound_device_changed:
+      listener(str(address))
+
+  @ClassLogger.TraceAs.call()
+  def unbind_device(self):
+    self.__bound_device_address = None
+
+    for listener in self.__on_bound_device_changed:
+      listener(None)
 
   def agent(self):
     return self.__agent
@@ -170,22 +180,8 @@ class Bluez4AdapterSignalHandler(ClassLogger):
 
   @ClassLogger.TraceAs.event()
   def device_found(self, address, properties):
-    self.__adapter.bound_device_changed(address)
-    #try:
-    #  self.__adapter.adapter().CreateDevice(address)
-    #except dbus.DBusException, ex:
-    #  if ex.get_dbus_name() != 'org.bluez.Error.AlreadyExists':
-    #    self.log().error('Unable to create device for ' + str(address) + str(ex))
-    #  else:
-    #    self.log().debug('Device already exists for ' + str(address))
-    #self.__adapter.adapter().CreatePairedDevice(
-    #  str(address),
-    #  self.__adapter.agent().path(),
-    #  self.__adapter.agent().capability(),
-    #  timeout = 60000,
-    #  reply_handler = create_device_reply,
-    #  error_handler = create_device_error
-    #)
+    if not self.__adapter.bound_device_address():
+      self.__adapter.bind_device(address)
 
   #def create_device_reply(device):
   #  pass
@@ -196,6 +192,10 @@ class Bluez4AdapterSignalHandler(ClassLogger):
   @ClassLogger.TraceAs.event()
   def device_disappeared(self, address):
     pass
+    # Devices are very transient, don't unbind if they disappear
+    #
+    #if str(address) == self.__adapter.bound_device_address():
+    #  self.__adapter.unbind_device()
 
   @ClassLogger.TraceAs.event()
   def device_created(self, device):
