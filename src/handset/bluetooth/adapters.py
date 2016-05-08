@@ -192,7 +192,9 @@ class Bluez4AdapterSignalHandler(ClassLogger):
   @ClassLogger.TraceAs.event()
   def device_disappeared(self, address):
     pass
-    # Devices are very transient, don't unbind if they disappear
+    # Devices are very transient, don't unbind if they disappear?
+    #
+    # Need to figure out a way to re-establish on a real disappearance
     #
     #if str(address) == self.__adapter.bound_device_address():
     #  self.__adapter.unbind_device()
