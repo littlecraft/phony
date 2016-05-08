@@ -52,7 +52,10 @@ class Bluez4(ClassLogger):
       dbus_interface = self.DBUS_MANAGER_INTERFACE
     )
 
-    self.__adapter_path = manager.FindAdapter(self.__hci_device)
+    if self.__hci_device:
+      self.__adapter_path = manager.FindAdapter(self.__hci_device)
+    else:
+      self.__adapter_path = manager.DefaultAdapter()
 
     self.__adapter = dbus.Interface(
       self.__bus.get_object(
