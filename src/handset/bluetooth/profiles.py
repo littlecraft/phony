@@ -4,16 +4,17 @@ from dbus.mainloop.glib import DBusGMainLoop
 from handset.base.log import ClassLogger
 from handset.base.log import Levels
 
-class HandsFree(ClassLogger):
+class DbusPaths:
+  DBUS_SERVICE_NAME = 'org.freedesktop.DBus'
+  DBUS_INTERFACE_DBUS = 'org.freedesktop.DBus'
+  DBUS_INTERFACE_PROPERTIES = 'org.freedesktop.DBus.Properties'
+  DBUS_BUS_OBJECT = '/org/freedesktop/DBus'
+
   #
   # These are the service and interface names exposed to dbus
   # by the hfpd (nohands) daemon.  @see hfconsole.in in the
   # source tree of the nohands project as a reference.
   #
-  DBUS_SERVICE_NAME = 'org.freedesktop.DBus'
-  DBUS_INTERFACE_DBUS = 'org.freedesktop.DBus'
-  DBUS_INTERFACE_PROPERTIES = 'org.freedesktop.DBus.Properties'
-  DBUS_BUS_OBJECT = '/org/freedesktop/DBus'
   HFPD_HANDSFREE_INTERFACE_NAME = 'net.sf.nohands.hfpd.HandsFree'
   HFPD_SOUNDIO_INTERFACE_NAME = 'net.sf.nohands.hfpd.SoundIo'
   HFPD_AUDIOGATEWAY_INTERFACE_NAME = 'net.sf.nohands.hfpd.AudioGateway'
@@ -21,6 +22,7 @@ class HandsFree(ClassLogger):
   HFPD_HANDSFREE_OBJECT = '/net/sf/nohands/hfpd'
   HFPD_SOUNDIO_OBJECT = '/net/sf/nohands/hfpd/soundio'
 
+class HandsFree(ClassLogger):
   # Only supports this version of hfpd
   HFPD_EXACT_VERSION = 4
 
@@ -54,10 +56,10 @@ class HandsFree(ClassLogger):
     try:
       self.__dbus_interface = dbus.Interface(
         self.__bus.get_object(
-          self.DBUS_SERVICE_NAME,
-          self.DBUS_BUS_OBJECT
+          DbusPaths.DBUS_SERVICE_NAME,
+          DbusPaths.DBUS_BUS_OBJECT
         ),
-        dbus_interface = self.DBUS_INTERFACE_DBUS
+        dbus_interface = DbusPaths.DBUS_INTERFACE_DBUS
       )
 
     except dbus.exception.DBusException, (ex):
@@ -66,18 +68,18 @@ class HandsFree(ClassLogger):
     try:
       self.__hfpd_interface = dbus.Interface(
         self.__bus.get_object(
-          self.HFPD_SERVICE_NAME,
-          self.HFPD_HANDSFREE_OBJECT
+          DbusPaths.HFPD_SERVICE_NAME,
+          DbusPaths.HFPD_HANDSFREE_OBJECT
         ),
-        dbus_interface = self.HFPD_HANDSFREE_INTERFACE_NAME
+        dbus_interface = DbusPaths.HFPD_HANDSFREE_INTERFACE_NAME
       )
 
       self.__hfpd_properties = dbus.Interface(
         self.__bus.get_object(
-          self.HFPD_SERVICE_NAME,
-          self.HFPD_HANDSFREE_OBJECT
+          DbusPaths.HFPD_SERVICE_NAME,
+          DbusPaths.HFPD_HANDSFREE_OBJECT
         ),
-        dbus_interface = self.DBUS_INTERFACE_PROPERTIES
+        dbus_interface = DbusPaths.DBUS_INTERFACE_PROPERTIES
       )
 
     except dbus.exceptions.DBusException, (ex):
@@ -130,10 +132,10 @@ class HandsFree(ClassLogger):
       del self.__audio_gateways[audio_gateway_path]
 
   def get_property(self, name):
-    return self.__hfpd_properties.Get(self.HFPD_HANDSFREE_INTERFACE_NAME, name)
+    return self.__hfpd_properties.Get(DbusPaths.HFPD_HANDSFREE_INTERFACE_NAME, name)
 
   def set_property(self, name, value):
-    self.__hfpd_properties.Set(self.HFPD_HANDSFREE_INTERFACE_NAME, name, value)
+    self.__hfpd_properties.Set(DbusPaths.HFPD_HANDSFREE_INTERFACE_NAME, name, value)
 
   def hfpd(self):
     return self.__hfpd_interface
@@ -158,7 +160,7 @@ class HfpDbusSignalHandler(ClassLogger):
     hfp.dbus_interface().connect_to_signal("NameOwnerChanged", self.name_owner_changed)
 
   def name_owner_changed(self, name, old_owner, new_owner):
-    if name != self.__hfp.HFPD_SERVICE_NAME or new_owner != '':
+    if name != DbusPaths.HFPD_SERVICE_NAME or new_owner != '':
       return
 
     self.log().debug('hfpd service disappeared, stopping');
@@ -233,40 +235,32 @@ class HfpAudioGateway(ClassLogger):
         or state == cls.DESTROYED \
         or state == cls.DISCONNECTED
 
-  class AudioState:
-    INVALID = 0
-    DISCONNECTED = 1
-    CONNECTING = 2
-    CONNECTED = 3
-
-  __hfp = None
   __ag_interface = None
   __ag_properties = None
   __path = None
   __features = []
   __connected = False
+  __soundio = None
 
   def __init__(self, hfp, audio_gateway_path):
     ClassLogger.__init__(self)
-
-    self.__hfp = hfp
 
     self.__path = audio_gateway_path
 
     self.__ag_interface = dbus.Interface(
       hfp.bus().get_object(
-        hfp.HFPD_SERVICE_NAME,
+        DbusPaths.HFPD_SERVICE_NAME,
         audio_gateway_path
       ),
-      dbus_interface = hfp.HFPD_AUDIOGATEWAY_INTERFACE_NAME
+      dbus_interface = DbusPaths.HFPD_AUDIOGATEWAY_INTERFACE_NAME
     )
 
     self.__ag_properties = dbus.Interface(
       hfp.bus().get_object(
-        hfp.HFPD_SERVICE_NAME,
+        DbusPaths.HFPD_SERVICE_NAME,
         audio_gateway_path
       ),
-      dbus_interface = hfp.DBUS_INTERFACE_PROPERTIES
+      dbus_interface = DbusPaths.DBUS_INTERFACE_PROPERTIES
     )
 
     self.__ag_interface.connect_to_signal('StateChanged',
@@ -282,6 +276,15 @@ class HfpAudioGateway(ClassLogger):
     self.__ag_interface.connect_to_signal('Ring',
       self.__ring_notify)
 
+    self.__soundio = HfpSoundIo(hfp, self)
+
+  @ClassLogger.TraceAs.call()
+  def start(self):
+    self.connect()
+
+  def path(self):
+    return self.__path
+
   @ClassLogger.TraceAs.call()
   def connect(self):
     # Further state change occurs in __gateway_state_changed
@@ -294,10 +297,6 @@ class HfpAudioGateway(ClassLogger):
 
   def connected(self):
     return self.__connected
-
-  @ClassLogger.TraceAs.call()
-  def start(self):
-    self.connect()
 
   @ClassLogger.TraceAs.event()
   def answer(self):
@@ -322,13 +321,13 @@ class HfpAudioGateway(ClassLogger):
 
   def get_property(self, name):
     return self.__ag_properties.Get(
-      self.__hfp.HFPD_AUDIOGATEWAY_INTERFACE_NAME,
+      DbusPaths.HFPD_AUDIOGATEWAY_INTERFACE_NAME,
       name
     )
 
   def set_property(self, name, value):
     return self.__ag_properties.Set(
-      self.__hfp.HFPD_AUDIOGATEWAY_INTERFACE_NAME,
+      DbusPaths.HFPD_AUDIOGATEWAY_INTERFACE_NAME,
       name,
       value
     )
@@ -359,6 +358,7 @@ class HfpAudioGateway(ClassLogger):
 
   def __open_audio(self):
     self.__ag_interface.OpenAudio()
+    self.__soundio.start()
 
   @ClassLogger.TraceAs.event()
   def __gateway_state_changed(self, state, voluntary):
@@ -393,29 +393,36 @@ class HfpAudioGateway(ClassLogger):
     pass
 
 class HfpSoundIo(ClassLogger):
+
+  class AudioState:
+    INVALID = 0
+    DISCONNECTED = 1
+    CONNECTING = 2
+    CONNECTED = 3
+
   __sound_io_interface = None
   __sound_io_properties = None
-  __hfp = None
+  __audio_gateway_path = None
 
-  def __init__(self, hfp):
+  def __init__(self, hfp, audio_gateway):
     ClassLogger.__init__(self)
 
-    self.__hfp = hfp
+    self.__audio_gateway_path = audio_gateway.path()
 
     self.__sound_io_interface = dbus.Interface(
       hfp.bus().get_object(
-        hfp.HFPD_SERVICE_NAME,
-        self.HFPD_SOUNDIO_OBJECT
+        DbusPaths.HFPD_SERVICE_NAME,
+        DbusPaths.HFPD_SOUNDIO_OBJECT
       ),
-      dbus_interface = hfp.HFPD_SOUNDIO_INTERFACE_NAME
+      dbus_interface = DbusPaths.HFPD_SOUNDIO_INTERFACE_NAME
     )
 
     self.__sound_io_properties = dbus.Interface(
       hfp.bus().get_object(
-        hfp.HFPD_SERVICE_NAME,
-        hfp.HFPD_SOUNDIO_OBJECT
+        DbusPaths.HFPD_SERVICE_NAME,
+        DbusPaths.HFPD_SOUNDIO_OBJECT
       ),
-      dbus_interface = hfp.DBUS_INTERFACE_PROPERTIES
+      dbus_interface = DbusPaths.DBUS_INTERFACE_PROPERTIES
     )
 
     self.__sound_io_interface.connect_to_signal('StateChanged', self.__state_changed)
@@ -423,9 +430,9 @@ class HfpSoundIo(ClassLogger):
     self.__sound_io_interface.connect_to_signal('SkewNotify', self.__skew_notify)
 
   @ClassLogger.TraceAs.call()
-  def start(self, audio_gateway_path):
+  def start(self):
     try:
-      self.__sound_io_interface.AudioGatewayStart(audio_gateway_path, False)
+      self.__sound_io_interface.AudioGatewayStart(self.__audio_gateway_path, False)
     except ex:
       self.__failure(str(ex))
 
