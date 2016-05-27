@@ -1,8 +1,11 @@
+import os
+import gobject
+import argparse
+import handset.base.log
+import handset.base.ipc
 import handset.bluetooth.profiles
 import handset.bluetooth.control
 import handset.bluetooth.adapters
-import gobject
-import argparse
 
 from handset.base import log
 
@@ -26,8 +29,11 @@ if __name__ == '__main__':
   # to automatically accept all pairing requests.
   #
 
-  with handset.bluetooth.adapters.Bluez4(args.interface) as adapter, \
-       handset.bluetooth.profiles.HandsFree() as profile, \
+  session_bus_path = os.environ.get('DBUS_SESSION_BUS_ADDRESS')
+  bus = handset.base.ipc.Bus(session_bus_path)
+
+  with handset.bluetooth.adapters.Bluez4(bus, args.interface) as adapter, \
+       handset.bluetooth.profiles.HandsFree(bus) as profile, \
        handset.bluetooth.control.Controller(adapter, profile) as control:
 
     control.start(args.name, args.pin)

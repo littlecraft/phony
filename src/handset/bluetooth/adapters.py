@@ -10,8 +10,12 @@ class Bluez4(ClassLogger):
   DBUS_ADAPTER_INTERFACE = 'org.bluez.Adapter'
   DBUS_DEVICE_INTERFACE = 'org.bluez.Device'
 
+<<<<<<< HEAD
   AGENT_PATH = '/phony/agent'
 
+=======
+  __bus_constructor = None
+>>>>>>> 4994878801ff4cd3a348716d20937bc216eb51c3
   __bus = None
 
   __hci_device = None
@@ -29,9 +33,10 @@ class Bluez4(ClassLogger):
 
   __started = False
 
-  def __init__(self, hci_device):
+  def __init__(self, bus_constructor, hci_device):
     ClassLogger.__init__(self)
     self.__hci_device = hci_device
+    self.__bus_constructor = bus_constructor
 
   def __enter__(self):
     return self
@@ -44,8 +49,7 @@ class Bluez4(ClassLogger):
     if self.__started:
       return
 
-    main_loop = DBusGMainLoop()
-    self.__bus = dbus.SystemBus(mainloop = main_loop)
+    self.__bus = self.__bus_constructor.system_bus()
 
     manager = dbus.Interface(
       self.__bus.get_object(
@@ -343,6 +347,7 @@ class Bluez4Device(ClassLogger):
     return self.__device.GetProperties()[name]
 
   def __repr__(self):
+<<<<<<< HEAD
     return self.address()
 
 class TooManyClientsException(Exception):
@@ -352,3 +357,6 @@ class TooManyClientsException(Exception):
 class ClientNotPairedException(Exception):
   def __init__(self, *args, **kwargs):
     Exception.__init__(self, *args, **kwargs)
+=======
+    return self.__get_property('Address')
+>>>>>>> 4994878801ff4cd3a348716d20937bc216eb51c3
