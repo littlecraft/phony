@@ -1,5 +1,7 @@
+import os
 import gobject
 import handset.base.log
+import handset.base.ipc
 import handset.bluetooth.profiles
 import handset.bluetooth.control
 import handset.bluetooth.adapters
@@ -23,9 +25,12 @@ if __name__ == '__main__':
   # Using sspmode 1 (Simple Pairing) will cause this application
   # to automatically accept all pairing requests.
   #
+  
+  session_bus_path = os.environ.get('DBUS_SESSION_BUS_ADDRESS')
+  bus = handset.base.ipc.Bus(session_bus_path)
 
-  with handset.bluetooth.adapters.Bluez4(args.interface) as adapter, \
-       handset.bluetooth.profiles.HandsFree() as profile, \
+  with handset.bluetooth.adapters.Bluez4(bus, args.interface) as adapter, \
+       handset.bluetooth.profiles.HandsFree(bus) as profile, \
        handset.bluetooth.control.Controller(adapter, profile) as control:
 
     control.start(args.name, args.pincode)

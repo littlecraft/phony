@@ -38,11 +38,10 @@ class HandsFree(ClassLogger):
 
   __audio_gateways = {}
 
-  def __init__(self):
+  def __init__(self, bus):
     ClassLogger.__init__(self)
 
-    main_loop = DBusGMainLoop()
-    self.__bus = dbus.SessionBus(mainloop = main_loop)
+    self.__bus = bus.session_bus()
 
   def __enter__(self):
     return self
