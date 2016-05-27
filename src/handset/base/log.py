@@ -1,4 +1,5 @@
 import logging
+import string
 from functools import wraps
 
 def send_to_stdout(level = logging.DEBUG):
@@ -15,6 +16,24 @@ class Levels:
   INFO = logging.INFO
   DEBUG = logging.DEBUG
   DEFAULT = logging.DEBUG
+
+  @classmethod
+  def parse(cls, str):
+    level = str.upper()
+    if level == 'CRITICAL':
+      return cls.CRITICAL
+    elif level == 'ERROR':
+      return cls.ERROR
+    elif level == 'WARNING':
+      return cls.WARNING
+    elif level == 'INFO':
+      return cls.INFO
+    elif level == 'DEBUG':
+      return cls.DEBUG
+    elif level == 'DEFAULT':
+      return cls.DEFAULT
+    else:
+      raise Exception('Unrecognized logging level: "' + str + '"')
 
 class ScopedLogger(object):
   __scope = ""
@@ -84,7 +103,15 @@ class NamedLogger(object):
 
     @staticmethod
     def __pretty(args):
-      val = ', '.join(filter(None, map(str, args)))
+      def stringify(s):
+        s = str(s)
+        if len(s) > 0 and not (s[0] in string.printable):
+          # Display the numeric value of the first unprintable character
+          return str(ord(s[0]))
+        else:
+          return s
+
+      val = ', '.join(filter(None, map(stringify, args)))
       if len(val) > 40:
         return val[:40] + '...'
       else:

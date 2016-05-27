@@ -1,5 +1,6 @@
 from handset.base import execute
 from handset.base.log import ClassLogger
+from handset.base.log import Levels
 
 class Controller(ClassLogger):
   __adapter = None
@@ -11,7 +12,11 @@ class Controller(ClassLogger):
     self.__adapter = adapter
     self.__profile = profile
 
-    adapter.on_bound_device_changed(self.__bound_device_changed)
+    adapter.on_client_endpoint_added(self.client_endpoint_added)
+    adapter.on_client_endpoint_removed(self.client_endpoint_removed)
+
+    profile.on_attached(self.profile_attached)
+    profile.on_detached(self.profile_detached)
 
   def __enter__(self):
     return self
@@ -35,6 +40,7 @@ class Controller(ClassLogger):
 
   def enable(self):
     self.log().info("Enabling radio")
+    # TODO: Ignore if rfkill is not available
     self.__exec("rfkill unblock bluetooth")
 
   def disable(self):
@@ -47,9 +53,21 @@ class Controller(ClassLogger):
   def disable_visibility(self):
     self.__adapter.enable_visibility()
 
-  @ClassLogger.TraceAs.event()
-  def __bound_device_changed(self, address):
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def client_endpoint_added(self, address):
     self.__profile.attach(address)
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def client_endpoint_removed(self, address):
+    pass
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def profile_attached(self):
+    pass
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def profile_detached(self):
+    pass
 
   def __exec(self, command):
     self.log().debug('Running: ' + command)

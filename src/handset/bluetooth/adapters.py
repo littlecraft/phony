@@ -10,6 +10,8 @@ class Bluez4(ClassLogger):
   DBUS_ADAPTER_INTERFACE = 'org.bluez.Adapter'
   DBUS_DEVICE_INTERFACE = 'org.bluez.Device'
 
+  AGENT_PATH = '/phony/agent'
+
   __bus = None
 
   __hci_device = None
@@ -20,9 +22,10 @@ class Bluez4(ClassLogger):
 
   __agent = None
 
-  __bound_device_address = None
-
-  __on_bound_device_changed = []
+  __maximum_client_endpoints = 1
+  __client_endpoints = []
+  __client_endpoint_added_listeners = []
+  __client_endpoint_removed_listeners = []
 
   __started = False
 
@@ -66,11 +69,11 @@ class Bluez4(ClassLogger):
     )
     self.__adapter_signal_handler = Bluez4AdapterSignalHandler(self)
 
-    agent_path = '/farmfone/agent'
-    self.__agent = Bluez4PermissibleAgent(self, agent_path)
+    self.__agent = Bluez4PermissibleAgent(self, self.AGENT_PATH)
     self.__agent.set_pincode(pincode);
 
-    self.__set_property('Name', name)
+    if name:
+      self.__set_property('Name', name)
 
     self.__started = True
 
@@ -102,25 +105,48 @@ class Bluez4(ClassLogger):
   def visible(self):
     return self.__get_property('Discoverable') and self.__get_property('Pairable')
 
-  def on_bound_device_changed(self, listener):
-    self.__on_bound_device_changed.append(listener)
+  def on_client_endpoint_added(self, listener):
+    self.__client_endpoint_added_listeners.append(listener)
 
-  def bound_device_address(self):
-    return self.__bound_device_address
+  def on_client_endpoint_removed(self, listener):
+    self.__client_endpoint_removed_listeners.append(listener)
 
-  @ClassLogger.TraceAs.call()
-  def bind_device(self, address):
-    self.__bound_device_address = address
+  def add_client_endpoint(self, address):
+    address = str(address)
 
-    for listener in self.__on_bound_device_changed:
-      listener(str(address))
+    for device in self.__client_endpoints:
+      if device.address() == address:
+        return # Already connected
 
-  @ClassLogger.TraceAs.call()
-  def unbind_device(self):
-    self.__bound_device_address = None
+    device = self.__get_device_by_address(address)
+    if not device.paired:
+      raise ClientNotPairedException()
 
-    for listener in self.__on_bound_device_changed:
-      listener(None)
+    if len(self.__client_endpoints) == self.__maximum_client_endpoints:
+      raise TooManyClientsException()
+
+    self.log().info('Client added: ' + address)
+
+    self.__client_endpoints.append(device)
+
+    for listener in self.__client_endpoint_added_listeners:
+      listener(address)
+
+  def remove_client_endpoint(self, address):
+    address = str(address)
+
+    removed = False
+    for device in self.__client_endpoints:
+      if device.address() == address:
+        self.__client_endpoints.remove(address)
+        removed = True
+        break
+
+    if removed:
+      self.log().info('Client removed: ' + address)
+
+      for listener in self.__client_endpoint_removed_listeners:
+        listener(address)
 
   def agent(self):
     return self.__agent
@@ -138,16 +164,20 @@ class Bluez4(ClassLogger):
     properties = self.__adapter.GetProperties()
     return properties[name]
 
-  def __bound_devices(self):
-    devices = []
+  def __paired_devices(self):
+    paired = []
     for device_path in self.adapter().ListDevices():
-      device = self.__get_device(device_path)
-      if (device.__get_property('Paired')):
-        devices.append(device)
+      device = self.__get_device_by_path(device_path)
+      if (device.paired()):
+        paired.append(device)
 
-    return devices
+    return paired
 
-  def __get_device(self, device_path):
+  def __get_device_by_address(self, device_address):
+    path = self.adapter().FindDevice(device_address)
+    return self.__get_device_by_path(path)
+
+  def __get_device_by_path(self, device_path):
     return Bluez4Device(
       dbus.Interface(
         self.__bus.get_object(
@@ -163,6 +193,9 @@ class Bluez4(ClassLogger):
     self.log().debug('Adapter name: ' + self.__get_property('Name'))
     self.log().debug('Adapter address: ' + self.__get_property('Address'))
     self.log().debug('Adapter class: ' + str(self.__get_property('Class')))
+
+class Bluez4ClientEndpoint(ClassLogger):
+  pass
 
 class Bluez4AdapterSignalHandler(ClassLogger):
   __adapter = None
@@ -181,10 +214,14 @@ class Bluez4AdapterSignalHandler(ClassLogger):
   def property_changed(self, name, value):
     pass
 
-  @ClassLogger.TraceAs.event()
+  #@ClassLogger.TraceAs.event()
   def device_found(self, address, properties):
-    if not self.__adapter.bound_device_address():
-      self.__adapter.bind_device(address)
+    try:
+      self.__adapter.add_client_endpoint(address)
+    except TooManyClientsException, ex:
+      self.log().debug('Maximum number of clients reached')
+    except Exception, ex:
+      pass
 
   #def create_device_reply(device):
   #  pass
@@ -192,15 +229,14 @@ class Bluez4AdapterSignalHandler(ClassLogger):
   #def create_device_error(error):
   #  pass
 
-  @ClassLogger.TraceAs.event()
+  #@ClassLogger.TraceAs.event()
   def device_disappeared(self, address):
     pass
     # Devices are very transient, don't unbind if they disappear?
     #
     # Need to figure out a way to re-establish on a real disappearance
     #
-    #if str(address) == self.__adapter.bound_device_address():
-    #  self.__adapter.unbind_device()
+    #  self.__adapter.remove_client_endpoint(address)
 
   @ClassLogger.TraceAs.event()
   def device_created(self, device):
@@ -227,12 +263,22 @@ class Bluez4PermissibleAgent(dbus.service.Object, ClassLogger):
     dbus.service.Object.__init__(self, adapter.bus(), path)
 
     self.__path = path
-    self.__capability = 'NoInputNoOutput'
+    self.__capability = 'DisplayYesNo'
+
+    #
+    # These profile modes appear to cause the agent to ignore
+    # pin and passcode requests...
+    #
+    #self.__capability = 'NoInputNoOutput'
+    #self.__capability = 'DisplayOnly'
+    #self.__capability = 'KeyboardOnly'
 
     adapter.adapter().RegisterAgent(path, self.__capability)
 
   def set_pincode(self, pincode):
-    self.__pincode = pincode
+    self.__pincode = str(pincode)
+    if len(self.__pincode) < 1 or len(self.__pincode) > 16:
+      raise Exception('Pincode must be between 1 and 16 characters long')
 
   def set_passcode(self, passcode):
     self.__passcode = passcode
@@ -245,41 +291,41 @@ class Bluez4PermissibleAgent(dbus.service.Object, ClassLogger):
 
   @dbus.service.method("org.bluez.Agent", in_signature="", out_signature="")
   def Release(self):
-    self.log().debug('Release')
+    self.log().info('Release')
 
   @dbus.service.method("org.bluez.Agent", in_signature="os", out_signature="")
   def Authorize(self, device, uuid):
-    self.log().debug("Authorize (%s, %s)" % (device, uuid))
+    self.log().info("Authorize (%s, %s)" % (device, uuid))
 
   @dbus.service.method("org.bluez.Agent", in_signature="o", out_signature="s")
   def RequestPinCode(self, device):
-    self.log().debug("RequestPinCode (%s)" % (device))
-    return str(self.__pincode)
+    self.log().info("RequestPinCode (%s)" % (device))
+    return self.__pincode
 
   @dbus.service.method("org.bluez.Agent", in_signature="o", out_signature="u")
   def RequestPasskey(self, device):
-    self.log().debug("RequestPasskey (%s)" % (device))
+    self.log().info("RequestPasskey (%s)" % (device))
     return dbus.UInt32(self.__passcode)
 
   @dbus.service.method("org.bluez.Agent", in_signature="ouq", out_signature="")
   def DisplayPasskey(self, device, passkey, entered):
-    self.log().debug("DisplayPasskey (%s, %06u entered %u)" % (device, passkey, entered))
+    self.log().info("DisplayPasskey (%s, %06u entered %u)" % (device, passkey, entered))
 
   @dbus.service.method("org.bluez.Agent", in_signature="os", out_signature="")
   def DisplayPinCode(self, device, pincode):
-    self.log().debug("DisplayPinCode (%s, %s)" % (device, pincode))
+    self.log().info("DisplayPinCode (%s, %s)" % (device, pincode))
 
   @dbus.service.method("org.bluez.Agent", in_signature="ou", out_signature="")
   def RequestConfirmation(self, device, passkey):
-    self.log().debug("RequestConfirmation (%s, %06d)" % (device, passkey))
+    self.log().info("RequestConfirmation (%s, %06d)" % (device, passkey))
 
   @dbus.service.method("org.bluez.Agent", in_signature="s", out_signature="")
   def ConfirmModeChange(self, mode):
-    self.log().debug("ConfirmModeChange (%s)" % (mode))
+    self.log().info("ConfirmModeChange (%s)" % (mode))
 
   @dbus.service.method("org.bluez.Agent", in_signature="", out_signature="")
   def Cancel(self):
-    self.log().debug("Cancel")
+    self.log().info("Cancel")
 
 class Bluez4Device(ClassLogger):
   __device = None
@@ -287,8 +333,22 @@ class Bluez4Device(ClassLogger):
   def __init__(self, device):
     self.__device = device
 
+  def address(self):
+    return self.__get_property('Address')
+
+  def paired(self):
+    return self.__get_property('Paired')
+
   def __get_property(self, name):
     return self.__device.GetProperties()[name]
 
   def __repr__(self):
-    return self.__get_property('Address')
+    return self.address()
+
+class TooManyClientsException(Exception):
+  def __init__(self, *args, **kwargs):
+    Exception.__init__(self, *args, **kwargs)
+
+class ClientNotPairedException(Exception):
+  def __init__(self, *args, **kwargs):
+    Exception.__init__(self, *args, **kwargs)

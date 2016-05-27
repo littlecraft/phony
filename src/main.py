@@ -1,22 +1,24 @@
-import gobject
-import handset.base.log
 import handset.bluetooth.profiles
 import handset.bluetooth.control
 import handset.bluetooth.adapters
+import gobject
 import argparse
+
+from handset.base import log
 
 def main_loop():
   return gobject.MainLoop()
 
 if __name__ == '__main__':
-  handset.base.log.send_to_stdout()
-
-  parser = argparse.ArgumentParser(description = 'Bluetooth Handsfree')
-  parser.add_argument('--interface', dest = 'interface')
-  parser.add_argument('--name', dest = 'name')
-  parser.add_argument('--pin', dest = 'pincode')
+  parser = argparse.ArgumentParser(description = 'Bluetooth Handsfree telephony service')
+  parser.add_argument('--interface', help = 'The BT interface to listen on')
+  parser.add_argument('--name', help = 'The name to advertise')
+  parser.add_argument('--pin', help = 'Pin code to use when Simple Pairing mode is not enabled and/or supported by remote client')
+  parser.add_argument('--log-level', default = 'DEFAULT', help = 'Logging level: DEFAULT, CRITICAL, ERROR, WARNING, INFO, DEBUG')
 
   args = parser.parse_args()
+
+  log.send_to_stdout(log.Levels.parse(args.log_level))
 
   #
   # To enforce use of pincode, set `hciconfig <hci> sspmode 0`
@@ -28,7 +30,7 @@ if __name__ == '__main__':
        handset.bluetooth.profiles.HandsFree() as profile, \
        handset.bluetooth.control.Controller(adapter, profile) as control:
 
-    control.start(args.name, args.pincode)
+    control.start(args.name, args.pin)
     control.enable_visibility()
 
     main_loop().run()
