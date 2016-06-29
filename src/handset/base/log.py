@@ -10,12 +10,18 @@ def send_to_stdout(level = logging.DEBUG):
   )
 
 class TypeLabel:
+  def source(self, instance):
+    return instance.__module__ + '.' + type(instance).__name__
+
   def call(self, instance, method, *args):
     args = pretty_args(args[1:]) if len(args) > 0 else ''
 
     return type(instance).__name__ + '.' + method.__name__ + '(' + args + ')'
 
 class InstanceLabel:
+  def source(self, instance):
+    return instance.__module__ + '.' + type(instance).__name__ + '.' + str(id(instance))
+
   def call(self, instance, method, *args):
     args = pretty_args(args[1:]) if len(args) > 0 else ''
 
@@ -127,17 +133,13 @@ class NamedLogger(object):
     return self.__log_name
 
 class ClassLogger(NamedLogger):
-  def __init__(self):
-    name = self.__module__ + '.' + type(self).__name__
+  def __init__(self, label_maker = TypeLabel()):
+    name = label_maker.source(self)
     NamedLogger.__init__(self, name)
 
 class InstanceLogger(NamedLogger):
-  def __init__(self):
-    name = "%s.%s.%s" % (
-      self.__module__,
-      type(self).__name__,
-      id(self)
-    )
+  def __init__(self, label_maker = InstanceLabel()):
+    name = label_maker.source(self)
     NamedLogger.__init__(self, name)
 
 def pretty_args(args, limit = 40):
