@@ -25,7 +25,7 @@ class InstanceLabel:
   def source(self, instance):
     return instance.__module__ + '.' + type(instance).__name__ + '.' + str(id(instance))
 
-  def call(self, instance, method, *args):
+  def call(self, instance, method, args):
     if args and len(args) > 0:
       args = pretty_args(args[1:])
     else:
@@ -65,8 +65,14 @@ class ScopedLogger(object):
   __level = None
   __instance = None
 
-  def __init__(self, logger_instance, scope_label, log_level = Levels.DEBUG):
-    self.__instance = logger_instance
+  def __init__(self, name_or_instance, scope_label, log_level = Levels.DEBUG):
+    if isinstance(name_or_instance, basestring):
+      self.__instance = NamedLogger(name_or_instance)
+    elif name_or_instance:
+      self.__instance = name_or_instance
+    else:
+      raise Exception('Must provide a name or logger class instance')
+
     self.__label = scope_label
     self.__level = log_level
 
