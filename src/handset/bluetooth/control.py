@@ -47,8 +47,8 @@ class Controller(ClassLogger):
     self.log().info("Disabling radio")
     self.__exec("rfkill block bluetooth")
 
-  def enable_visibility(self):
-    self.__adapter.enable_visibility()
+  def enable_visibility(self, timeout = 0):
+    self.__adapter.enable_visibility(timeout)
 
   def disable_visibility(self):
     self.__adapter.enable_visibility()

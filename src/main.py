@@ -16,7 +16,8 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description = 'Bluetooth Handsfree telephony service')
   parser.add_argument('--interface', help = 'The BT interface to listen on')
   parser.add_argument('--name', help = 'The name to advertise')
-  parser.add_argument('--pin', help = 'Pin code to use when Simple Pairing mode is not enabled and/or supported by remote client')
+  parser.add_argument('--pin', help = 'Pin code to use when Simple Pairing mode is not enabled and/or unsupported by remote client')
+  parser.add_argument('--visibility-timeout', default = 0, help = 'Duration (seconds) to remain visible and pairable (default is 0, no timeout)')
   parser.add_argument('--log-level', default = 'DEFAULT', help = 'Logging level: DEFAULT, CRITICAL, ERROR, WARNING, INFO, DEBUG')
 
   args = parser.parse_args()
@@ -38,7 +39,6 @@ if __name__ == '__main__':
        handset.bluetooth.control.Controller(adapter, profile) as control:
 
     control.start(args.name, args.pin)
-    control.enable_visibility()
+    control.enable_visibility(args.visibility_timeout)
 
-    handset.base.log.ScopedLogger
     main_loop().run()
