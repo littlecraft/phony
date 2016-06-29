@@ -13,8 +13,11 @@ class TypeLabel:
   def source(self, instance):
     return instance.__module__ + '.' + type(instance).__name__
 
-  def call(self, instance, method, *args):
-    args = pretty_args(args[1:]) if len(args) > 0 else ''
+  def call(self, instance, method, args):
+    if args and len(args) > 0:
+      args = pretty_args(args[1:])
+    else:
+      args = ''
 
     return type(instance).__name__ + '.' + method.__name__ + '(' + args + ')'
 
@@ -23,7 +26,10 @@ class InstanceLabel:
     return instance.__module__ + '.' + type(instance).__name__ + '.' + str(id(instance))
 
   def call(self, instance, method, *args):
-    args = pretty_args(args[1:]) if len(args) > 0 else ''
+    if args and len(args) > 0:
+      args = pretty_args(args[1:])
+    else:
+      args = ''
 
     type_and_instance = type(instance).__name__ + '.' + str(id(instance))
     return type_and_instance + '.' + method.__name__ + '(' + args + ')'
@@ -109,7 +115,7 @@ class NamedLogger(object):
           label = label_maker.call(instance, method, args if with_arguments else None)
           label = '** ' + label + ' **'
 
-          instance.log().log(level, name)
+          instance.log().log(level, label)
 
           method(*args, **kwargs)
 

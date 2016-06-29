@@ -34,8 +34,17 @@ class Bluez5(ClassLogger):
       return
 
     self.__adapter = Bluez5Utils.find_adapter(self.__hci_device, self.__bus)
+
     adapter_path = self.__adapter.object_path
     self.__adapter_properties = Bluez5Utils.properties(adapter_path, self.__bus)
+
+    self.__bus.add_signal_receiver(
+      self.known_device_properties_changed,
+      dbus_interface = Bluez5Utils.PROPERTIES_INTERFACE,
+      signal_name = 'PropertiesChanged',
+      arg0 = Bluez5Utils.DEVICE_INTERFACE,
+      path_keyword = 'path'
+    )
 
     self.enable()
 
@@ -85,6 +94,10 @@ class Bluez5(ClassLogger):
 
   def on_client_endpoint_removed(self, listener):
     self.__client_endpoint_removed_listeners.append(listener)
+
+  @ClassLogger.TraceAs.event()
+  def known_device_properties_changed(self, interface, changed, invalidated, path):
+    pass
 
   def __show_device_properties(self):
     self.log().debug('Adapter device id: ' + self.__adapter.object_path)
