@@ -9,6 +9,19 @@ def send_to_stdout(level = logging.DEBUG):
     datefmt = '%Y-%m-%d %H:%M:%S'
   )
 
+class TypeLabel:
+  def call(self, instance, method, *args):
+    args = pretty_args(args[1:]) if len(args) > 0 else ''
+
+    return type(instance).__name__ + '.' + method.__name__ + '(' + args + ')'
+
+class InstanceLabel:
+  def call(self, instance, method, *args):
+    args = pretty_args(args[1:]) if len(args) > 0 else ''
+
+    type_and_instance = type(instance).__name__ + '.' + str(id(instance))
+    return type_and_instance + '.' + method.__name__ + '(' + args + ')'
+
 class Levels:
   CRITICAL = logging.CRITICAL
   ERROR = logging.ERROR
@@ -36,20 +49,20 @@ class Levels:
       raise Exception('Unrecognized logging level: "' + str + '"')
 
 class ScopedLogger(object):
-  __scope = ""
+  __label = ""
   __level = None
   __instance = None
 
-  def __init__(self, logger_instance, scope_name, log_level = Levels.DEBUG):
+  def __init__(self, logger_instance, scope_label, log_level = Levels.DEBUG):
     self.__instance = logger_instance
-    self.__scope = scope_name
+    self.__label = scope_label
     self.__level = log_level
 
   def __enter__(self):
-    self.__instance.log().log(self.__level, "-> " + self.__scope)
+    self.__instance.log().log(self.__level, "-> " + self.__label)
 
   def __exit__(self, exc_type, exc_value, traceback):
-    self.__instance.log().log(self.__level, "<- " + self.__scope)
+    self.__instance.log().log(self.__level, "<- " + self.__label)
 
 class NamedLogger(object):
   __log_name = ""
@@ -58,68 +71,48 @@ class NamedLogger(object):
 
   class TraceAs:
     @staticmethod
-    def call(with_arguments = True, log_level = Levels.DEFAULT):
+    def call(with_arguments = True, log_level = Levels.DEFAULT, label_maker = TypeLabel()):
       def decorator(method):
         def call_wrapper(*args, **kwargs):
           instance = args[0]
-
-          if with_arguments:
-            displayable_args = NamedLogger.TraceAs.__pretty(args[1:])
-          else:
-            displayable_args = ''
 
           if log_level == Levels.DEFAULT:
             level = instance.log_level()
           else:
             level = log_level
 
-          name = method.__name__ + '(' + displayable_args + ')'
-          with ScopedLogger(instance, name, log_level) as scope:
+          label = label_maker.call(instance, method, args if with_arguments else None)
+
+          with ScopedLogger(instance, label, log_level) as scope:
             method(*args, **kwargs)
+
         return call_wrapper
       return decorator
 
     @staticmethod
-    def event(with_arguments = True, log_level = Levels.DEFAULT):
+    def event(with_arguments = True, log_level = Levels.DEFAULT, label_maker = TypeLabel()):
       def decorator(method):
         def call_wrapper(*args, **kwargs):
           instance = args[0]
-
-          if with_arguments:
-            displayable_args = NamedLogger.TraceAs.__pretty(args[1:])
-          else:
-            displayable_args = ''
 
           if log_level == Levels.DEFAULT:
             level = instance.log_level()
           else:
             level = log_level
 
-          name = '** ' + method.__name__ + '(' + displayable_args + ') **'
+          label = label_maker.call(instance, method, args if with_arguments else None)
+          label = '** ' + label + ' **'
+
           instance.log().log(level, name)
+
           method(*args, **kwargs)
+
         return call_wrapper
       return decorator
-
-    @staticmethod
-    def __pretty(args):
-      def stringify(s):
-        s = str(s)
-        if len(s) > 0 and not (s[0] in string.printable):
-          # Display the numeric value of the first unprintable character
-          return str(ord(s[0]))
-        else:
-          return s
-
-      val = ', '.join(filter(None, map(stringify, args)))
-      if len(val) > 40:
-        return val[:40] + '...'
-      else:
-        return val
 
   def __init__(self, name):
-    self.__log_name = name
-    self.__log = logging.getLogger(name)
+    self.__log_name = str(name)
+    self.__log = logging.getLogger(self.__log_name)
 
   def log(self):
     return self.__log
@@ -135,17 +128,32 @@ class NamedLogger(object):
 
 class ClassLogger(NamedLogger):
   def __init__(self):
-    name = self.__module__ + "." + type(self).__name__
+    name = self.__module__ + '.' + type(self).__name__
     NamedLogger.__init__(self, name)
 
 class InstanceLogger(NamedLogger):
   def __init__(self):
-    name = "%s.%s(%s)" % (
+    name = "%s.%s.%s" % (
       self.__module__,
       type(self).__name__,
       id(self)
     )
     NamedLogger.__init__(self, name)
+
+def pretty_args(args, limit = 40):
+  def stringify(s):
+    s = str(s)
+    if len(s) > 0 and not (s[0] in string.printable):
+      # Display the numeric value of the first unprintable character
+      return str(ord(s[0]))
+    else:
+      return s
+
+  val = ', '.join(filter(None, map(stringify, args)))
+  if len(val) > limit:
+    return val[:limit] + '...'
+  else:
+    return val
 
 # def _log_public_method(method):
 #     @wraps(method)

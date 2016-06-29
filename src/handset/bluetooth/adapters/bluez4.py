@@ -1,6 +1,5 @@
 import dbus
 import dbus.service
-from dbus.mainloop.glib import DBusGMainLoop
 from handset.base.log import ClassLogger
 
 class Bluez4(ClassLogger):
@@ -10,12 +9,9 @@ class Bluez4(ClassLogger):
   DBUS_ADAPTER_INTERFACE = 'org.bluez.Adapter'
   DBUS_DEVICE_INTERFACE = 'org.bluez.Device'
 
-<<<<<<< HEAD
   AGENT_PATH = '/phony/agent'
 
-=======
   __bus_constructor = None
->>>>>>> 4994878801ff4cd3a348716d20937bc216eb51c3
   __bus = None
 
   __hci_device = None
@@ -347,7 +343,6 @@ class Bluez4Device(ClassLogger):
     return self.__device.GetProperties()[name]
 
   def __repr__(self):
-<<<<<<< HEAD
     return self.address()
 
 class TooManyClientsException(Exception):
@@ -357,6 +352,3 @@ class TooManyClientsException(Exception):
 class ClientNotPairedException(Exception):
   def __init__(self, *args, **kwargs):
     Exception.__init__(self, *args, **kwargs)
-=======
-    return self.__get_property('Address')
->>>>>>> 4994878801ff4cd3a348716d20937bc216eb51c3

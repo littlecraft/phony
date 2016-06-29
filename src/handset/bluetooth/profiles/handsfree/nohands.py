@@ -1,8 +1,7 @@
 import dbus
 import handset.base.log
 from dbus.mainloop.glib import DBusGMainLoop
-from handset.base.log import ClassLogger
-from handset.base.log import Levels
+from handset.base.log import ClassLogger, Levels
 
 class DbusPaths:
   DBUS_SERVICE_NAME = 'org.freedesktop.DBus'
@@ -22,8 +21,8 @@ class DbusPaths:
   HFPD_HANDSFREE_OBJECT = '/net/sf/nohands/hfpd'
   HFPD_SOUNDIO_OBJECT = '/net/sf/nohands/hfpd/soundio'
 
-class HandsFree(ClassLogger):
-  # Only supports this version of hfpd
+class NoHands(ClassLogger):
+  # Only supports this version of hfpd:
   HFPD_EXACT_VERSION = 4
 
   __started = False

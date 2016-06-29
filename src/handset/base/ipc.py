@@ -11,7 +11,7 @@ class Bus:
     return DBusGMainLoop()
 
   def system_bus(self):
-    return dbus.SystemBus(mainloop = self.main_loop()) 
+    return dbus.SystemBus(mainloop = self.main_loop())
 
   def session_bus(self):
     main_loop = self.main_loop()
