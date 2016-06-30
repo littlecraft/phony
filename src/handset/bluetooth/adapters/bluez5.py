@@ -39,7 +39,7 @@ class Bluez5(ClassLogger):
     self.__adapter_properties = Bluez5Utils.properties(adapter_path, self.__bus)
 
     self.__bus.add_signal_receiver(
-      self.known_device_properties_changed,
+      self.properties_changed,
       dbus_interface = Bluez5Utils.PROPERTIES_INTERFACE,
       signal_name = 'PropertiesChanged',
       arg0 = Bluez5Utils.DEVICE_INTERFACE,
@@ -51,7 +51,7 @@ class Bluez5(ClassLogger):
     if name:
       self.__set_property('Alias', name)
 
-    self.__show_device_properties()
+    self.__show_adapter_properties()
 
     self.log().info('Registering agent: ' + self.AGENT_PATH)
     self.__agent = PermissibleAgent(self.__bus, self.AGENT_PATH)
@@ -100,11 +100,16 @@ class Bluez5(ClassLogger):
   def on_client_endpoint_removed(self, listener):
     self.__client_endpoint_removed_listeners.append(listener)
 
-  @ClassLogger.TraceAs.event()
-  def known_device_properties_changed(self, interface, changed, invalidated, path):
-    pass
+  def properties_changed(self, interface, changed, invalidated, path):
+    if interface == Bluez5Utils.DEVICE_INTERFACE:
+      self.device_properties_changed(changed, path)
 
-  def __show_device_properties(self):
+  def device_properties_changed(self, changed, path):
+    if 'Connected' in changed:
+      connected = changed['Connected']
+      self.log().info('Device: ' + path + (' Connected' if connected else ' Disconnected'))
+
+  def __show_adapter_properties(self):
     self.log().debug('Adapter device id: ' + self.__adapter.object_path)
     self.log().debug('Adapter name: ' + self.__get_property('Name'))
     self.log().debug('Adapter alias: ' + self.__get_property('Alias'))

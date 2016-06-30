@@ -44,7 +44,7 @@ class HandsFreeDevice(log.ClassLogger):
       control.start(args.name, args.pin)
       control.enable_visibility(args.visibility_timeout)
 
-      with handset.base.log.ScopedLogger(self, 'main_loop'):
+      with log.ScopedLogger(self, 'main_loop'):
         self.main_loop().run()
 
 if __name__ == '__main__':

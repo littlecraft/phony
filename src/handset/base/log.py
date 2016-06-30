@@ -2,6 +2,8 @@ import logging
 import string
 from functools import wraps
 
+MAXIMUM_TRACE_WIDTH = 40
+
 def send_to_stdout(level = logging.DEBUG):
   logging.basicConfig(
     level = level,
@@ -13,9 +15,9 @@ class TypeLabel:
   def source(self, instance):
     return instance.__module__ + '.' + type(instance).__name__
 
-  def call(self, instance, method, args):
+  def call(self, instance, method, args, limit):
     if args and len(args) > 0:
-      args = pretty_args(args[1:])
+      args = pretty_args(args[1:], limit)
     else:
       args = ''
 
@@ -25,9 +27,9 @@ class InstanceLabel:
   def source(self, instance):
     return instance.__module__ + '.' + type(instance).__name__ + '.' + str(id(instance))
 
-  def call(self, instance, method, args):
+  def call(self, instance, method, args, limit):
     if args and len(args) > 0:
-      args = pretty_args(args[1:])
+      args = pretty_args(args[1:], limit)
     else:
       args = ''
 
@@ -89,7 +91,7 @@ class NamedLogger(object):
 
   class TraceAs:
     @staticmethod
-    def call(with_arguments = True, log_level = Levels.DEFAULT, label_maker = TypeLabel()):
+    def call(with_arguments = True, width = MAXIMUM_TRACE_WIDTH, log_level = Levels.DEFAULT, label_maker = TypeLabel()):
       def decorator(method):
         def call_wrapper(*args, **kwargs):
           instance = args[0]
@@ -99,7 +101,7 @@ class NamedLogger(object):
           else:
             level = log_level
 
-          label = label_maker.call(instance, method, args if with_arguments else None)
+          label = label_maker.call(instance, method, args if with_arguments else None, width)
 
           with ScopedLogger(instance, label, log_level) as scope:
             method(*args, **kwargs)
@@ -108,7 +110,7 @@ class NamedLogger(object):
       return decorator
 
     @staticmethod
-    def event(with_arguments = True, log_level = Levels.DEFAULT, label_maker = TypeLabel()):
+    def event(with_arguments = True, width = MAXIMUM_TRACE_WIDTH, log_level = Levels.DEFAULT, label_maker = TypeLabel()):
       def decorator(method):
         def call_wrapper(*args, **kwargs):
           instance = args[0]
@@ -118,7 +120,7 @@ class NamedLogger(object):
           else:
             level = log_level
 
-          label = label_maker.call(instance, method, args if with_arguments else None)
+          label = label_maker.call(instance, method, args if with_arguments else None, width)
           label = '** ' + label + ' **'
 
           instance.log().log(level, label)
@@ -154,7 +156,7 @@ class InstanceLogger(NamedLogger):
     name = label_maker.source(self)
     NamedLogger.__init__(self, name)
 
-def pretty_args(args, limit = 40):
+def pretty_args(args, limit):
   def stringify(s):
     s = str(s)
     if len(s) > 0 and not (s[0] in string.printable):
