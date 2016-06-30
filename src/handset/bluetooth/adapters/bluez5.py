@@ -77,6 +77,7 @@ class Bluez5(ClassLogger):
   def enabled(self):
     return self.__get_property('Powered')
 
+  @ClassLogger.TraceAs.call()
   def enable_visibility(self, timeout = 0):
     self.__set_property('Discoverable', True)
     self.__set_property('Pairable', True)
@@ -84,6 +85,7 @@ class Bluez5(ClassLogger):
     self.__set_property('DiscoverableTimeout', dbus.UInt32(timeout))
     self.__adapter.StartDiscovery()
 
+  @ClassLogger.TraceAs.call()
   def disable_visibility(self):
     self.__set_property('Discoverable', False)
     self.__set_property('Pairable', False)
@@ -107,14 +109,22 @@ class Bluez5(ClassLogger):
   def device_properties_changed(self, changed, path):
     if 'Connected' in changed:
       connected = changed['Connected']
+      if connected:
+        listeners = self.__client_endpoint_added_listeners
+      else:
+        listeners = self.__client_endpoint_removed_listeners
+
       self.log().info('Device: ' + path + (' Connected' if connected else ' Disconnected'))
 
+      for listener in listeners:
+        listener(path)
+
   def __show_adapter_properties(self):
-    self.log().debug('Adapter device id: ' + self.__adapter.object_path)
-    self.log().debug('Adapter name: ' + self.__get_property('Name'))
-    self.log().debug('Adapter alias: ' + self.__get_property('Alias'))
-    self.log().debug('Adapter address: ' + self.__get_property('Address'))
-    self.log().debug('Adapter class: 0x%06x' % self.__get_property('Class'))
+    self.log().debug('Adapter Path: ' + self.__adapter.object_path)
+    self.log().debug('Adapter Name: ' + self.__get_property('Name'))
+    self.log().debug('Adapter Alias: ' + self.__get_property('Alias'))
+    self.log().debug('Adapter Address: ' + self.__get_property('Address'))
+    self.log().debug('Adapter Class: 0x%06x' % self.__get_property('Class'))
 
   def __get_property(self, prop):
     return self.__adapter_properties.Get(Bluez5Utils.ADAPTER_INTERFACE, prop)

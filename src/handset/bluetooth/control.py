@@ -1,8 +1,11 @@
+import time
 from handset.base import execute
-from handset.base.log import ClassLogger
+from handset.base.log import ClassLogger, ScopedLogger
 from handset.base.log import Levels
 
 class Controller(ClassLogger):
+  DELAY_BEFORE_ATTACHING = 1
+
   __adapter = None
   __profile = None
   __started = False
@@ -55,18 +58,24 @@ class Controller(ClassLogger):
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def client_endpoint_added(self, address):
-    self.__profile.attach(address)
+    try:
+      with ScopedLogger(self, 'wait_for_profile_subsystem_to_settle'):
+        time.sleep(self.DELAY_BEFORE_ATTACHING)
+
+      self.__profile.attach(address)
+    except Exception, ex:
+      self.log().error('Unable to attach to device: ' + address + ': ' + str(ex))
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def client_endpoint_removed(self, address):
+    self.__profile.detach(address)
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def profile_attached(self, profile_path):
     pass
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def profile_attached(self):
-    pass
-
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def profile_detached(self):
+  def profile_detached(self, profile_path):
     pass
 
   def __exec(self, command):
