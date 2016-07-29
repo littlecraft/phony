@@ -1,6 +1,7 @@
 import dbus
 import dbus.service
-from handset.base.log import ClassLogger
+
+from phony.base.log import ClassLogger
 
 class Bluez4(ClassLogger):
   DBUS_SERVICE_NAME = 'org.bluez'

@@ -1,9 +1,9 @@
 import dbus
-from dbus import service
-from handset.base import execute
-from handset.base.log import ClassLogger, ScopedLogger
-from handset.base.log import Levels
 import time
+
+from dbus import service
+from phony.base import execute
+from phony.base.log import ClassLogger, ScopedLogger, Levels
 
 class Headset(ClassLogger, dbus.service.Object):
   OBJECT_PATH = '/org/littlecraft/Phony'

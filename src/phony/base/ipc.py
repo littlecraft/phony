@@ -1,4 +1,5 @@
 import dbus
+
 from dbus.mainloop.glib import DBusGMainLoop
 
 class Bus:

@@ -1,5 +1,6 @@
 import logging
 import string
+
 from functools import wraps
 
 MAXIMUM_TRACE_WIDTH = 40

@@ -1,14 +1,14 @@
 import os
 import gobject
 import argparse
-import application
-import handset.base.ipc
-import handset.bluetooth.adapters
-import handset.bluetooth.profiles.handsfree
+import traits
+import phony.base.ipc
+import phony.bluetooth.adapters
+import phony.bluetooth.profiles.handsfree
 
-from handset.base import log
+from phony.base import log
 
-class HandsFreeDevice(log.ClassLogger):
+class ApplicationMain(log.ClassLogger):
   def __init__(self):
     log.ClassLogger.__init__(self)
 
@@ -29,21 +29,17 @@ class HandsFreeDevice(log.ClassLogger):
     log.send_to_stdout(level = level)
 
     #
-    # Ensure that the adapter has the correct class
-    # `hciconfig hci0 class 6c0408`
-
-    #
     # To enforce use of pincode, set `hciconfig <hci> sspmode 0`
     # Using sspmode 1 (Simple Pairing) will cause this application
     # to automatically accept all pairing requests.
     #
 
     session_bus_path = os.environ.get('DBUS_SESSION_BUS_ADDRESS')
-    bus = handset.base.ipc.Bus(session_bus_path)
+    bus = phony.base.ipc.Bus(session_bus_path)
 
-    with handset.bluetooth.adapters.Bluez5(bus, args.interface) as adapter, \
-         handset.bluetooth.profiles.handsfree.Ofono(bus) as hfp, \
-         application.Headset(bus, adapter, hfp) as headset:
+    with phony.bluetooth.adapters.Bluez5(bus, args.interface) as adapter, \
+         phony.bluetooth.profiles.handsfree.Ofono(bus) as hfp, \
+         traits.Headset(bus, adapter, hfp) as headset:
 
       headset.start(args.name, args.pin)
       headset.enable_pairability(args.visibility_timeout)
@@ -52,5 +48,5 @@ class HandsFreeDevice(log.ClassLogger):
         self.main_loop().run()
 
 if __name__ == '__main__':
-  main = HandsFreeDevice()
+  main = ApplicationMain()
   main.run()

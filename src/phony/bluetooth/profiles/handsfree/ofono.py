@@ -2,7 +2,8 @@ import dbus
 import dbus.service
 import time
 import glib
-from handset.base.log import ClassLogger, ScopedLogger, Levels
+
+from phony.base.log import ClassLogger, ScopedLogger, Levels
 
 class Ofono(ClassLogger):
   SERVICE_NAME = 'org.ofono'

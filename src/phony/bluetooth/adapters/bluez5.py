@@ -1,6 +1,7 @@
 import dbus
-from handset.base import execute
-from handset.base.log import ClassLogger
+
+from phony.base import execute
+from phony.base.log import ClassLogger
 
 class Bluez5(ClassLogger):
   AGENT_PATH = '/phony/agent/bluez'

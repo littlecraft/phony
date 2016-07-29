@@ -1,7 +1,8 @@
 import dbus
-import handset.base.log
+import phony.base.log
+
 from dbus.mainloop.glib import DBusGMainLoop
-from handset.base.log import ClassLogger, Levels
+from phony.base.log import ClassLogger, Levels
 
 class DbusPaths:
   DBUS_SERVICE_NAME = 'org.freedesktop.DBus'
