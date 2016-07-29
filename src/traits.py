@@ -78,21 +78,28 @@ class Headset(ClassLogger, dbus.service.Object):
       return
 
     if self.__device and device.address() != self.__device.address():
-      self.log().info('One device connection allowed.  Disconnecting from "%s"' % self.__device)
+      self.log().info('One device connection allowed.  Disconnecting from previous "%s"' % self.__device)
       self.__device.disconnect()
 
     self.__device = device
+
+    try:
+      self.__hfp.attach_audio_gateway(
+        self.__adapter,
+        device,
+        self.audio_gateway_attached
+      )
+    except Exception, ex:
+      self.__device.disconnect()
+      self.__device = None
+      raise ex
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def device_disconnected(self, device):
     pass
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def profile_attached(self, hfp):
-    pass
-
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def profile_detached(self, hfp):
+  def audio_gateway_attached(self, audio_gateway):
     pass
 
   @dbus.service.method(dbus_interface = SERVICE_NAME)

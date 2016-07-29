@@ -9,25 +9,18 @@ class Ofono(ClassLogger):
   SERVICE_NAME = 'org.ofono'
   MANAGER_INTERFACE = 'org.ofono.Manager'
   HFP_INTERFACE = 'org.ofono.Handsfree'
-  HFP_AUDIO_MANAGER_INTERFACE = 'org.ofono.HandsfreeAudioManager'
-  HFP_AUDIO_CARD = 'org.ofono.HandsfreeAudioCard'
-
-  AUDIO_AGENT_PATH = '/phony/agent/audio'
+  MODEM_INTERFACE = 'org.ofono.Modem'
+  VOICE_CALL_MANAGER_INTERFACE = 'org.ofono.VoiceCallManager'
 
   __bus = None
-
   __manager = None
-  __hfp_audio_manager = None
-  __hfp = None
-  __audio_card = None
-  __audio_agent = None
 
   __modem = None
-  __path = None
 
-  __attachement_attempt_listeners = []
-  __attached_listeners = []
-  __detached_listeners = []
+  __adapter = None
+  __device = None
+
+  __found_hfp_audio_gateway_listener = None
 
   def __init__(self, bus):
     ClassLogger.__init__(self)
@@ -41,136 +34,96 @@ class Ofono(ClassLogger):
       self.MANAGER_INTERFACE
     )
 
-    self.__hfp_audio_manager = dbus.Interface(
-      self.__bus.get_object(self.SERVICE_NAME, '/'),
-      self.HFP_AUDIO_MANAGER_INTERFACE
-    )
-
-    #self.__audio_agent = AudioAgent(self.__bus, self.AUDIO_AGENT_PATH)
+    self.__manager.connect_to_signal('ModemAdded', self.modem_added)
+    self.__manager.connect_to_signal('ModemRemoved', self.modem_removed)
 
   @ClassLogger.TraceAs.call()
   def stop(self):
     pass
 
   @ClassLogger.TraceAs.call()
-  def attach(self, adapter, device_address):
-    found_path, found_properties = self.__find_modem(adapter, device_address)
+  def attach_audio_gateway(self, adapter, device, listener):
+    self.__modem = None
+    self.__found_hfp_audio_gateway_listener = None
 
-    if not found_path:
-      raise Exception('Unable to find HandsFree profile for ' + \
-        device_address)
+    self.__adapter = adapter
+    self.__device = device
 
-    self.log().info('Attempting to attach to profile path: ' + found_path)
-    self.__hfp = dbus.Interface(
-      self.__bus.get_object(self.SERVICE_NAME, found_path),
-      self.HFP_INTERFACE
-    )
+    path, properties = self.__find_our_hfp_modem()
 
-    self.__show_device_properties(found_properties)
-    self.__show_hands_free_properties(self.__hfp.GetProperties())
-
-    for listener in self.__attachement_attempt_listeners:
-      try:
-        listener(self)
-      except Exception, ex:
-        raise Exception('Profile rejected for ' + \
-          device_address + ': ' + str(ex))
-
-    self.__audio_card = self.__find_audio_card(found_path)
-    self.__show_audio_card_properties(self.__audio_card.GetProperties())
-
-    self.__path = found_path
-
-    for listener in self.__attached_listeners:
-      listener(self)
-
-  @ClassLogger.TraceAs.event()
-  def detach(self, adapter, device_address):
-    if not self.__path:
+    # It's already available, so use it.
+    if path and properties['Online']:
+      self.log().debug('Found modem immediately!')
+      self.__show_modem_properties(properties)
+      listener(OfonoHandsFreeAudioGateway(path, self.__bus))
       return
 
-    for listener in self.__detached_listeners:
-      listener(self)
+    if path:
+      # If one was found, but it is not yet online,
+      # wait for it to go online.
 
-  def attached(self):
-    return bool(self.__path)
+      self.log().debug('Found modem, but it is offline, waiting for it to come online')
 
-  def provides_voice_recognition(self):
-    if not self.attached():
-      raise Exception('Profile is not attached to device')
+      self.__modem = dbus.Interface(
+        self.__bus.get_object(self.SERVICE_NAME, path),
+        self.MODEM_INTERFACE
+      )
 
-    return 'voice-recognition' in self.__hfp.GetProperties()['Features']
+      self.__modem.connect_to_signal('PropertyChanged',
+        self.wait_for_modem_to_go_online)
+    else:
+      # Otherwise, wait for the modem to be attached
+      # to the adapter and device.
 
-  @ClassLogger.TraceAs.event()
-  def begin_voice_dial(self):
-    if not self.attached():
-      raise Exception('Profile is not attached to device')
+      self.log().debug('No modem found, waiting for one to appear')
 
-    if not self.provides_voice_recognition():
-      raise Exception('Device does not support voice recognition')
-
-    self.__hfp.SetProperty('VoiceRecognition', True)
-
-  def cancel_voice_dial(self):
-    if not self.attached():
-      raise Exception('Profile is not attached to device')
-
-    if not self.provides_voice_recognition():
-      raise Exception('Device does not support voice recognition')
-
-    self.__hfp.SetProperty('VoiceRecognition', False)
+    self.__found_hfp_audio_gateway_listener = listener
 
   @ClassLogger.TraceAs.event()
-  def dial(self, number):
-    if not self.attached():
-      raise Exception('Profile is not attached to device')
+  def modem_added(self, path, properties):
+    pass
 
-    vcm = dbus.Interface(
-      self.__bus.get_object('org.ofono', self.__path),
-      'org.ofono.VoiceCallManager'
-    )
-    dial_path = vcm.Dial(number, 'default')
+  @ClassLogger.TraceAs.event()
+  def modem_removed(self, path):
+    pass
 
-  def on_attachement_attempt(self, listener):
-    self.__attachement_attempt_listeners.append(listener)
+  def wait_for_modem_to_go_online(self, name, value):
+    if self.__modem:
+      if name == 'Online' and value:
+        self.log().debug('Modem is online, notifying...')
+        ag = OfonoHandsFreeAudioGateway(self.__modem.object_path, self.__bus)
+        self.__found_hfp_audio_gateway_listener(ag)
 
-  def on_attached(self, listener):
-    self.__attached_listeners.append(listener)
+        self.__modem = None
+        self.__adapter = None
+        self.__device = None
 
-  def on_detached(self, listener):
-    self.__detached_listeners.append(listener)
 
-  def __find_modem(self, adapter, device_address):
+  def __find_our_hfp_modem(self):
     found_path = None
     found_properties = None
 
     modems = self.__manager.GetModems()
 
+    # TODO: Verify that the modem is attached to _both_
+    # the adapter and remote device.  This is necessary
+    # in cases where the host has more than one BT adapter.
+
     for path, properties in modems:
-      if path.endswith(device_address) \
-         and properties['Type'] == 'hfp' \
-         and self.HFP_INTERFACE in properties['Interfaces']:
+      if self.__is_our_hfp_modem(path, properties):
         found_path = path
         found_properties = properties
         break
 
     return (found_path, found_properties)
 
-  def __find_audio_card(self, device_address):
-    device_address = device_address.replace('_', ':')
-    for card_path, properties in self.__hfp_audio_manager.GetCards():
-      if device_address.endswith(properties['RemoteAddress']):
-        card = dbus.Interface(
-          self.__bus.get_object(self.SERVICE_NAME, card_path),
-          self.HFP_AUDIO_CARD
-        )
+  def __is_our_hfp_modem(self, path, properties):
+    path = path.replace('_', ':')
+    path = path.upper()
+    return path.endswith(self.__device.address()) \
+      and properties['Type'] == 'hfp'
 
-        return card
-
-    raise Exception('Could not find hands free audio gateway for: ' + \
-      device_address)
-
-  def __show_device_properties(self, properties):
+  def __show_modem_properties(self, properties):
     self.log().info('Device Name: ' + properties['Name'])
     self.log().info('Device Profile Type: ' + properties['Type'])
     self.log().info('Device Online: %s' % properties['Online'])
@@ -180,70 +133,58 @@ class Ofono(ClassLogger):
       ifaces += iface + ' '
     self.log().info('Device Interfaces: %s' % ifaces)
 
-  def __show_hands_free_properties(self, properties):
-    features = ''
-    for feature in properties['Features']:
-      features += feature + ' '
-    self.log().info('Device HFP Features: %s' % features)
-
-  def __show_audio_card_properties(self, properties):
-    self.log().info('Audio Card LocalAddress: ' + str(properties['LocalAddress']))
-    self.log().info('Audio Card RemoteAddress: ' + str(properties['RemoteAddress']))
-    #self.log().info('Audio Card Type: ' + str(properties['Type']))
-
   def __enter__(self):
     return self
 
   def __exit__(self, exc_type, exc_value, traceback):
     pass
 
-class AudioAgent(dbus.service.Object, ClassLogger):
-  SERVICE_NAME = 'org.ofono'
-  HFP_AUDIO_MANAGER_INTERFACE = 'org.ofono.HandsfreeAudioManager'
+class OfonoHandsFreeAudioGateway(ClassLogger):
+  __path = None
+  __hfp = None
+  __voice_call_manager = None
 
-  CVSD_CODEC = dbus.Byte(0x01)
-  MSBC_CODEC = dbus.Byte(0x02)
-
-  def __init__(self, bus, path):
+  def __init__(self, path, bus):
     ClassLogger.__init__(self)
-    dbus.service.Object.__init__(self, bus, path)
 
-    audio_manager = dbus.Interface(
-      bus.get_object(self.SERVICE_NAME, '/'),
-      self.HFP_AUDIO_MANAGER_INTERFACE
+    self.__bus = bus
+    self.__path = path
+
+    self.__hfp = dbus.Interface(
+      self.__bus.get_object(Ofono.SERVICE_NAME, self.__path),
+      Ofono.HFP_INTERFACE
     )
 
-    codecs = [
-      self.CVSD_CODEC,
-      self.MSBC_CODEC
-    ]
-
-    audio_manager.Register(path, codecs)
-
-  @dbus.service.method('org.ofono.HandsfreeAudioAgent', in_signature = 'ohy')
-  def NewConnection(self, card, sco, codec):
-    self.log().info('NewConnection: %s, %s' % (card, sco))
-
-    glib.io_add_watch(
-      sco,
-      glib.IO_IN | glib.IO_ERR | glib.IO_HUB,
-      self.__io_watch
+    self.__voice_call_manager = dbus.Interface(
+      self.__bus.get_object(Ofono.SERVICE_NAME, self.__path),
+      Ofono.VOICE_CALL_MANAGER_INTERFACE
     )
 
-  @dbus.service.method('org.ofono.HandsfreeAudioAgent')
-  def Release(self):
-    self.log().info('Release')
+  def provides_voice_recognition(self):
+    return 'voice-recognition' in self.__hfp.GetProperties()['Features']
 
-  def __io_watch(self, fd, condition):
-    events = []
+  @ClassLogger.TraceAs.event()
+  def begin_voice_dial(self):
+    if not self.provides_voice_recognition():
+      raise Exception('Device does not support voice recognition')
 
-    if condition & glib.IO_ERR:
-      events.append('Error')
+    self.__hfp.SetProperty('VoiceRecognition', True)
 
-    if condition & glib.IO_HUP:
-      events.append('Closed')
+  @ClassLogger.TraceAs.event()
+  def cancel_voice_dial(self):
+    if not self.provides_voice_recognition():
+      raise Exception('Device does not support voice recognition')
 
-    if condition & glib.IO_IN:
-      events.append('Read')
+    self.__hfp.SetProperty('VoiceRecognition', False)
 
-    self.log().debug('IO Events: ' + events.join(','))
+  @ClassLogger.TraceAs.event()
+  def dial(self, number):
+    dial_path = self.__voice_call_manager.Dial(number, 'default')
+
+  def __show_hands_free_properties(self):
+    properties = self.__hfp.GetProperties()
+
+    features = ''
+    for feature in properties['Features']:
+      features += feature + ' '
+    self.log().info('Device HFP Features: %s' % features)

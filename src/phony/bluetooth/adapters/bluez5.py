@@ -37,8 +37,10 @@ class Bluez5(ClassLogger):
 
     self.__adapter = Bluez5Utils.find_adapter(self.__hci_device, self.__bus)
 
-    adapter_path = self.__adapter.object_path
-    self.__adapter_properties = Bluez5Utils.properties(adapter_path, self.__bus)
+    self.__adapter_properties = Bluez5Utils.properties(
+      self.__adapter.object_path,
+      self.__bus
+    )
 
     self.__bus.add_signal_receiver(
       self.properties_changed,
@@ -61,7 +63,7 @@ class Bluez5(ClassLogger):
 
     self.__started = True
 
-    self.__reestablish_device_connections()
+    self.__find_connected_devices_and_notify()
 
   def stop(self):
     if not self.__started:
@@ -69,6 +71,8 @@ class Bluez5(ClassLogger):
 
     if self.pairable():
       self.disable_pairability()
+
+    self.disconnect_all_devices()
 
     self.__started = False
 
@@ -112,10 +116,6 @@ class Bluez5(ClassLogger):
     return self.__get_property('Class')
 
   @ClassLogger.TraceAs.call()
-  def disconnect_device(self, path):
-    pass
-
-  @ClassLogger.TraceAs.call()
   def disconnect_all_devices(self):
     devices = self.__find_connected_devices()
     for device in devices:
@@ -146,7 +146,7 @@ class Bluez5(ClassLogger):
         device = Bluez5Device(device, self.__bus)
         listener(device)
 
-  def __reestablish_device_connections(self):
+  def __find_connected_devices_and_notify(self):
     # This is mostly for development, in case the main application
     # is restarted after a device has already been paired and connected.
     already_connected = self.__find_connected_devices()
