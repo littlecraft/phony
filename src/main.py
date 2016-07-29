@@ -1,16 +1,17 @@
 import os
 import gobject
 import argparse
-import traits
+import headset
 import phony.base.ipc
 import phony.bluetooth.adapters
 import phony.bluetooth.profiles.handsfree
 
 from phony.base import log
+from phony.base.log import ClassLogger, ScopedLogger
 
-class ApplicationMain(log.ClassLogger):
+class ApplicationMain(ClassLogger):
   def __init__(self):
-    log.ClassLogger.__init__(self)
+    ClassLogger.__init__(self)
 
   def main_loop(self):
     return gobject.MainLoop()
@@ -39,12 +40,12 @@ class ApplicationMain(log.ClassLogger):
 
     with phony.bluetooth.adapters.Bluez5(bus, args.interface) as adapter, \
          phony.bluetooth.profiles.handsfree.Ofono(bus) as hfp, \
-         traits.Headset(bus, adapter, hfp) as headset:
+         headset.Headset(bus, adapter, hfp) as control:
 
-      headset.start(args.name, args.pin)
-      headset.enable_pairability(args.visibility_timeout)
+      control.start(args.name, args.pin)
+      control.enable_pairability(args.visibility_timeout)
 
-      with log.ScopedLogger(self, 'main_loop'):
+      with ScopedLogger(self, 'main_loop'):
         self.main_loop().run()
 
 if __name__ == '__main__':

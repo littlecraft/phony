@@ -9,11 +9,14 @@ class Headset(ClassLogger, dbus.service.Object):
   OBJECT_PATH = '/org/littlecraft/Phony'
   SERVICE_NAME = 'org.littlecraft.Phony'
 
+  __started = False
   __bus = None
+
   __adapter = None
   __profile = None
-  __started = False
+
   __device = None
+  __audio_gateway = None
 
   def __init__(self, bus, adapter, hfp):
     ClassLogger.__init__(self)
@@ -48,6 +51,7 @@ class Headset(ClassLogger, dbus.service.Object):
     if self.__started:
       self.__adapter.stop()
       self.__hfp.stop()
+      self.__reset()
 
   def enable(self):
     self.log().info("Enabling radio")
@@ -66,7 +70,7 @@ class Headset(ClassLogger, dbus.service.Object):
   def enable_pairability(self, timeout = 0):
     self.__adapter.enable_pairability(timeout)
 
-  def disable_visibility(self):
+  def disable_pairability(self):
     self.__adapter.disable_pairability()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
@@ -77,30 +81,43 @@ class Headset(ClassLogger, dbus.service.Object):
       device.disconnect()
       return
 
-    if self.__device and device.address() != self.__device.address():
+    if self.__device and device != self.__device:
       self.log().info('One device connection allowed.  Disconnecting from previous "%s"' % self.__device)
-      self.__device.disconnect()
+      self.__reset()
 
     self.__device = device
 
     try:
       self.__hfp.attach_audio_gateway(
         self.__adapter,
-        device,
+        self.__device,
         self.audio_gateway_attached
       )
     except Exception, ex:
-      self.__device.disconnect()
-      self.__device = None
+      self.__reset()
       raise ex
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def device_disconnected(self, device):
-    pass
+    if self.__device and device == self.__device:
+      self.__reset()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def audio_gateway_attached(self, audio_gateway):
-    pass
+    self.__audio_gateway = audio_gateway
+
+  def __reset(self):
+    if self.__audio_gateway:
+      self.__audio_gateway.dispose()
+      self.__audio_gateway = None
+
+    if self.__device:
+      self.__device.dispose()
+      self.__device = None
+
+  def __exec(self, command):
+    self.log().debug('Running: ' + command)
+    execute.privileged(command, shell = True)
 
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def BeginVoiceDial(self):
@@ -110,7 +127,3 @@ class Headset(ClassLogger, dbus.service.Object):
     input_signature = 's')
   def Dial(self, number):
     self.__hfp.dial(number)
-
-  def __exec(self, command):
-    self.log().debug('Running: ' + command)
-    execute.privileged(command, shell = True)

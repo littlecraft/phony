@@ -51,11 +51,13 @@ class Ofono(ClassLogger):
 
     path, properties = self.__find_our_hfp_modem()
 
-    # It's already available, so use it.
     if path and properties['Online']:
+      # It's already available, so use it and return
+
       self.log().debug('Found modem immediately!')
+
       self.__show_modem_properties(properties)
-      listener(OfonoHandsFreeAudioGateway(path, self.__bus))
+      listener(OfonoHfpAg(path, self.__bus))
       return
 
     if path:
@@ -91,7 +93,7 @@ class Ofono(ClassLogger):
     if self.__modem:
       if name == 'Online' and value:
         self.log().debug('Modem is online, notifying...')
-        ag = OfonoHandsFreeAudioGateway(self.__modem.object_path, self.__bus)
+        ag = OfonoHfpAg(self.__modem.object_path, self.__bus)
         self.__found_hfp_audio_gateway_listener(ag)
 
         self.__modem = None
@@ -139,7 +141,7 @@ class Ofono(ClassLogger):
   def __exit__(self, exc_type, exc_value, traceback):
     pass
 
-class OfonoHandsFreeAudioGateway(ClassLogger):
+class OfonoHfpAg(ClassLogger):
   __path = None
   __hfp = None
   __voice_call_manager = None
@@ -160,8 +162,21 @@ class OfonoHandsFreeAudioGateway(ClassLogger):
       Ofono.VOICE_CALL_MANAGER_INTERFACE
     )
 
+    self.__show_hands_free_properties()
+
+  @ClassLogger.TraceAs.call()
+  def dispose(self):
+    try:
+      self.hangup()
+    except Exception, ex:
+      self.log().warn(str(ex))
+
   def provides_voice_recognition(self):
     return 'voice-recognition' in self.__hfp.GetProperties()['Features']
+
+  @ClassLogger.TraceAs.event()
+  def hangup(self):
+    self.__voice_call_manager.HangupAll()
 
   @ClassLogger.TraceAs.event()
   def begin_voice_dial(self):
@@ -171,15 +186,8 @@ class OfonoHandsFreeAudioGateway(ClassLogger):
     self.__hfp.SetProperty('VoiceRecognition', True)
 
   @ClassLogger.TraceAs.event()
-  def cancel_voice_dial(self):
-    if not self.provides_voice_recognition():
-      raise Exception('Device does not support voice recognition')
-
-    self.__hfp.SetProperty('VoiceRecognition', False)
-
-  @ClassLogger.TraceAs.event()
   def dial(self, number):
-    dial_path = self.__voice_call_manager.Dial(number, 'default')
+    self.__voice_call_manager.Dial(number, 'default')
 
   def __show_hands_free_properties(self):
     properties = self.__hfp.GetProperties()

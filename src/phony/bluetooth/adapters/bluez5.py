@@ -406,8 +406,16 @@ class Bluez5Device(ClassLogger):
 
     self.__properties = Bluez5Utils.properties(device.object_path, self.__bus)
 
+  @ClassLogger.TraceAs.call()
+  def dispose(self):
+    try:
+      self.disconnect()
+    except Exception, ex:
+      self.log().warn(str(ex))
+
   def disconnect(self):
-    return self.__device.Disconnect()
+    if self.connected():
+      return self.__device.Disconnect()
 
   def path(self):
     return self.__device.object_path
@@ -449,3 +457,7 @@ class Bluez5Device(ClassLogger):
 
   def __repr__(self):
     return '%s %s' % (self.address(), self.name())
+
+  def __eq__(self, other):
+    return (isinstance(other, self.__class__)
+      and self.address() == other.address())
