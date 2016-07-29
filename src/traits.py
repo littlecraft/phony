@@ -70,18 +70,21 @@ class Headset(ClassLogger, dbus.service.Object):
     self.__adapter.disable_pairability()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def device_connected(self, address):
-    self.__endpoint = address
-    #try:
-    #  time.sleep(5)
-    #  self.__hfp.attach(self.__adapter, address)
-    #except Exception, ex:
-    #  self.log().error('Unable to attach to device: ' + address + ': ' + str(ex))
-    pass
+  def device_connected(self, device):
+
+    if not device.provides_hfp_audio_gateway():
+      self.log().info('Disconnecting from "%s", does not support HFP AudioGateway' % device)
+      device.disconnect()
+      return
+
+    if self.__device and device.address() != self.__device.address():
+      self.log().info('One device connection allowed.  Disconnecting from "%s"' % self.__device)
+      self.__device.disconnect()
+
+    self.__device = device
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def device_disconnected(self, address):
-    #self.__hfp.detach(self.__adapter, address)
+  def device_disconnected(self, device):
     pass
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)

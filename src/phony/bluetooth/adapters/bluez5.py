@@ -119,7 +119,7 @@ class Bluez5(ClassLogger):
   def disconnect_all_devices(self):
     devices = self.__find_connected_devices()
     for device in devices:
-      device.Disconnected()
+      device.disconnect()
 
   def on_device_connected(self, listener):
     self.__on_device_connected_listeners.append(listener)
@@ -142,31 +142,30 @@ class Bluez5(ClassLogger):
       self.log().info('Device: ' + path + (' Connected' if connected else ' Disconnected'))
 
       for listener in listeners:
-        listener(path)
+        device = Bluez5Utils.device(path, self.__bus)
+        device = Bluez5Device(device, self.__bus)
+        listener(device)
 
   def __reestablish_device_connections(self):
     # This is mostly for development, in case the main application
     # is restarted after a device has already been paired and connected.
     already_connected = self.__find_connected_devices()
 
-    self.log().info('Found %d device(s) already connected, Notifying...' % len(already_connected))
+    if len(already_connected) > 0:
+      self.log().info('Found %d device(s) connected, notifying...' % len(already_connected))
 
     for device in already_connected:
       for listener in self.__on_device_connected_listeners:
-        listener(device.object_path)
+        listener(device)
 
   def __find_connected_devices(self):
     connected_devices = []
 
     devices = Bluez5Utils.get_known_devices(self.address(), self.__bus)
     for device in devices:
-      """What a pain in the ass!"""
-      properties = Bluez5Utils.properties(device.object_path, self.__bus)
+      device = Bluez5Device(device, self.__bus)
 
-      paired = properties.Get(Bluez5Utils.DEVICE_INTERFACE, 'Paired')
-      connected = properties.Get(Bluez5Utils.DEVICE_INTERFACE, 'Connected')
-
-      if paired and connected:
+      if device.paired() and device.connected():
         connected_devices.append(device)
 
     return connected_devices
@@ -234,41 +233,41 @@ class PermissibleAgent(dbus.service.Object, ClassLogger):
 
   @dbus.service.method("org.bluez.Agent1", in_signature="", out_signature="")
   def Release(self):
-    self.log().info('Release')
+    self.log().debug('Release')
 
   @dbus.service.method("org.bluez.Agent1", in_signature="os", out_signature="")
   def AuthorizeService(self, device, uuid):
-    self.log().info("Authorize (%s, %s)" % (device, uuid))
+    self.log().debug("Authorize (%s, %s)" % (device, uuid))
 
   @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="s")
   def RequestPinCode(self, device):
-    self.log().info("RequestPinCode (%s)" % (device))
+    self.log().debug("RequestPinCode (%s)" % (device))
     return self.__pincode
 
   @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="u")
   def RequestPasskey(self, device):
-    self.log().info("RequestPasskey (%s)" % (device))
+    self.log().debug("RequestPasskey (%s)" % (device))
     return dbus.UInt32(self.__passcode)
 
   @dbus.service.method("org.bluez.Agent1", in_signature="ouq", out_signature="")
   def DisplayPasskey(self, device, passkey, entered):
-    self.log().info("DisplayPasskey (%s, %06u entered %u)" % (device, passkey, entered))
+    self.log().debug("DisplayPasskey (%s, %06u entered %u)" % (device, passkey, entered))
 
   @dbus.service.method("org.bluez.Agent1", in_signature="os", out_signature="")
   def DisplayPinCode(self, device, pincode):
-    self.log().info("DisplayPinCode (%s, %s)" % (device, pincode))
+    self.log().debug("DisplayPinCode (%s, %s)" % (device, pincode))
 
   @dbus.service.method("org.bluez.Agent1", in_signature="ou", out_signature="")
   def RequestConfirmation(self, device, passkey):
-    self.log().info("RequestConfirmation (%s, %06d)" % (device, passkey))
+    self.log().debug("RequestConfirmation (%s, %06d)" % (device, passkey))
 
   @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="")
   def RequestAuthorization(self, device):
-    self.log().info("RequestAuthorization (%s)" % (device))
+    self.log().debug("RequestAuthorization (%s)" % (device))
 
   @dbus.service.method("org.bluez.Agent1", in_signature="", out_signature="")
   def Cancel(self):
-    self.log().info("Cancel")
+    self.log().debug("Cancel")
 
 class Bluez5Utils:
   """bluez5-x.y/test/bluezutils.py"""
@@ -280,6 +279,11 @@ class Bluez5Utils:
 
   OBJECT_MANAGER_INTERFACE = 'org.freedesktop.DBus.ObjectManager'
   PROPERTIES_INTERFACE = 'org.freedesktop.DBus.Properties'
+
+  class UUID:
+    Base = '00000000-0000-1000-8000-00805F9B34FB'
+    HandsFree = '0000111E-0000-1000-8000-00805F9B34FB'
+    HandsFreeAudioGateway = '0000111F-0000-1000-8000-00805F9B34FB'
 
   @staticmethod
   def get_managed_objects(bus):
@@ -303,12 +307,14 @@ class Bluez5Utils:
       pattern = pattern.upper()
     for path, ifaces in objects.iteritems():
       adapter = ifaces.get(Bluez5Utils.ADAPTER_INTERFACE)
+
       if adapter is None:
         continue
+
       address = adapter['Address'].upper()
       if not pattern or pattern == address or path.endswith(pattern):
-        obj = bus.get_object(Bluez5Utils.SERVICE_NAME, path)
-        return dbus.Interface(obj, Bluez5Utils.ADAPTER_INTERFACE)
+        return Bluez5Utils.adapter(path, bus)
+
     raise Exception('Bluetooth adapter not found: "' + \
       pattern if pattern else '*' + '"')
 
@@ -330,11 +336,12 @@ class Bluez5Utils:
       path_prefix = adapter.object_path
     for path, ifaces in objects.iteritems():
       device = ifaces.get(Bluez5Utils.DEVICE_INTERFACE)
+
       if device is None:
         continue
+
       if path.startswith(path_prefix):
-        obj = bus.get_object(Bluez5Utils.SERVICE_NAME, path)
-        devices.append(dbus.Interface(obj, Bluez5Utils.DEVICE_INTERFACE))
+        devices.append(Bluez5Utils.device(path, bus))
 
     return devices
 
@@ -355,12 +362,13 @@ class Bluez5Utils:
       path_prefix = adapter.object_path
     for path, ifaces in objects.iteritems():
       device = ifaces.get(Bluez5Utils.DEVICE_INTERFACE)
+
       if device is None:
         continue
+
       if (device['Address'] == device_address and
               path.startswith(path_prefix)):
-        obj = bus.get_object(Bluez5Utils.SERVICE_NAME, path)
-        return dbus.Interface(obj, Bluez5Utils.DEVICE_INTERFACE)
+        return Bluez5Utils.device(path, bus)
 
     raise Exception('Bluetooth device not found')
 
@@ -370,3 +378,74 @@ class Bluez5Utils:
       bus.get_object(Bluez5Utils.SERVICE_NAME, path),
       Bluez5Utils.PROPERTIES_INTERFACE
     )
+
+  @staticmethod
+  def device(path, bus):
+    return dbus.Interface(
+      bus.get_object(Bluez5Utils.SERVICE_NAME, path),
+      Bluez5Utils.DEVICE_INTERFACE
+    )
+
+  @staticmethod
+  def adapter(path, bus):
+    return dbus.Interface(
+      bus.get_object(Bluez5Utils.SERVICE_NAME, path),
+      Bluez5Utils.ADAPTER_INTERFACE
+    )
+
+class Bluez5Device(ClassLogger):
+  __device = None
+  __properties = None
+  __bus = None
+
+  def __init__(self, device, bus):
+    ClassLogger.__init__(self)
+
+    self.__device = device
+    self.__bus = bus
+
+    self.__properties = Bluez5Utils.properties(device.object_path, self.__bus)
+
+  def disconnect(self):
+    return self.__device.Disconnect()
+
+  def path(self):
+    return self.__device.object_path
+
+  def address(self):
+    return self.__get_property('Address')
+
+  def name(self):
+    return self.__get_property('Name')
+
+  def connected(self):
+    return self.__get_property('Connected')
+
+  def paired(self):
+    return self.__get_property('Paired')
+
+  def provides_hfp(self):
+    return self.provides_service(Bluez5Utils.UUID.HandsFree)
+
+  def provides_hfp_audio_gateway(self):
+    return self.provides_service(Bluez5Utils.UUID.HandsFreeAudioGateway)
+
+  def uuids(self):
+    return self.__get_property('UUIDs')
+
+  def provides_service(self, uuid):
+    uuid = uuid.lower()
+    for service in self.uuids():
+      if str(service).lower() == uuid:
+        return True
+
+    return False
+
+  def __get_property(self, prop):
+    return self.__properties.Get(Bluez5Utils.DEVICE_INTERFACE, prop)
+
+  def __set_property(self, prop, value):
+    self.__properties.Set(Bluez5Utils.DEVICE_INTERFACE, prop, value)
+
+  def __repr__(self):
+    return '%s %s' % (self.address(), self.name())
