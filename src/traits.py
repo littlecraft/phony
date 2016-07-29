@@ -13,6 +13,7 @@ class Headset(ClassLogger, dbus.service.Object):
   __adapter = None
   __profile = None
   __started = False
+  __device = None
 
   def __init__(self, bus, adapter, hfp):
     ClassLogger.__init__(self)
@@ -50,12 +51,17 @@ class Headset(ClassLogger, dbus.service.Object):
 
   def enable(self):
     self.log().info("Enabling radio")
-    # TODO: Ignore if rfkill is not available
-    self.__exec("rfkill unblock bluetooth")
+    try:
+      self.__exec("rfkill unblock bluetooth")
+    except Exception, ex:
+      self.log().debug('Unable to unblock bluetooth with rfkill: %s' % ex)
 
   def disable(self):
     self.log().info("Disabling radio")
-    self.__exec("rfkill block bluetooth")
+    try:
+      self.__exec("rfkill block bluetooth")
+    except:
+      pass
 
   def enable_pairability(self, timeout = 0):
     self.__adapter.enable_pairability(timeout)
