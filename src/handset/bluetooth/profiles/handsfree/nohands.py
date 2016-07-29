@@ -118,12 +118,15 @@ class NoHands(ClassLogger):
     pass
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def attach(self, device_address):
+  def attach(self, adapter, device_address):
     try:
       # HfpAudioGateway class is constructed via AudioGatewayAdded signal handler
       audio_gateway_path = self.__hfpd_interface.AddDevice(device_address, False)
     except Exception, ex:
       self.log().error('Could not attach device ' + str(device_address) + ' : ' + str(ex))
+
+  def detach(self, adapter, device_address):
+    pass
 
   def on_attached(self, listener):
     self.__audio_gateway_attached_listeners.append(listener)

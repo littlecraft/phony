@@ -1,8 +1,8 @@
 import os
 import gobject
 import argparse
+import application
 import handset.base.ipc
-import handset.bluetooth.control
 import handset.bluetooth.adapters
 import handset.bluetooth.profiles.handsfree
 
@@ -29,6 +29,10 @@ class HandsFreeDevice(log.ClassLogger):
     log.send_to_stdout(level = level)
 
     #
+    # Ensure that the adapter has the correct class
+    # `hciconfig hci0 class 6c0408`
+
+    #
     # To enforce use of pincode, set `hciconfig <hci> sspmode 0`
     # Using sspmode 1 (Simple Pairing) will cause this application
     # to automatically accept all pairing requests.
@@ -38,11 +42,11 @@ class HandsFreeDevice(log.ClassLogger):
     bus = handset.base.ipc.Bus(session_bus_path)
 
     with handset.bluetooth.adapters.Bluez5(bus, args.interface) as adapter, \
-         handset.bluetooth.profiles.handsfree.Ofono(bus) as profile, \
-         handset.bluetooth.control.Controller(adapter, profile) as control:
+         handset.bluetooth.profiles.handsfree.Ofono(bus) as hfp, \
+         application.Headset(bus, adapter, hfp) as headset:
 
-      control.start(args.name, args.pin)
-      control.enable_visibility(args.visibility_timeout)
+      headset.start(args.name, args.pin)
+      headset.enable_pairability(args.visibility_timeout)
 
       with log.ScopedLogger(self, 'main_loop'):
         self.main_loop().run()

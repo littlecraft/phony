@@ -1,8 +1,9 @@
 import dbus
+from handset.base import execute
 from handset.base.log import ClassLogger
 
 class Bluez5(ClassLogger):
-  AGENT_PATH = '/phony/agent'
+  AGENT_PATH = '/phony/agent/bluez'
   __agent = None
 
   __hci_device = None
@@ -12,8 +13,8 @@ class Bluez5(ClassLogger):
   __adapter = None
   __adapter_properties = None
 
-  __client_endpoint_added_listeners = []
-  __client_endpoint_removed_listeners = []
+  __on_device_connected_listeners = []
+  __on_device_disconnected_listeners = []
 
   __started = False
 
@@ -54,7 +55,7 @@ class Bluez5(ClassLogger):
     self.__show_adapter_properties()
 
     self.log().info('Registering agent: ' + self.AGENT_PATH)
-    self.__agent = PermissibleAgent(self.__bus, self.AGENT_PATH)
+    self.__agent = Agent(self.__bus, self.AGENT_PATH)
     self.__agent.set_pincode(pincode)
 
     self.__started = True
@@ -78,7 +79,7 @@ class Bluez5(ClassLogger):
     return self.__get_property('Powered')
 
   @ClassLogger.TraceAs.call()
-  def enable_visibility(self, timeout = 0):
+  def enable_pairability(self, timeout = 0):
     self.__set_property('Discoverable', True)
     self.__set_property('Pairable', True)
     self.__set_property('PairableTimeout', dbus.UInt32(timeout))
@@ -86,21 +87,30 @@ class Bluez5(ClassLogger):
     self.__adapter.StartDiscovery()
 
   @ClassLogger.TraceAs.call()
-  def disable_visibility(self):
-    self.__set_property('Discoverable', False)
-    self.__set_property('Pairable', False)
-    self.__set_property('PairableTimeout', dbus.UInt32(0))
-    self.__set_property('DiscoverableTimeout', dbus.UInt32(180))
-    self.__adapter.StopDiscovery()
+  def disable_pairability(self):
+    try:
+      self.__set_property('Discoverable', False)
+      self.__set_property('Pairable', False)
+      self.__set_property('PairableTimeout', dbus.UInt32(0))
+      self.__set_property('DiscoverableTimeout', dbus.UInt32(180))
+      self.__adapter.StopDiscovery()
+    except:
+      pass
 
   def visible(self):
     return self.__get_property('Discoverable') and self.__get_property('Pairable')
 
-  def on_client_endpoint_added(self, listener):
-    self.__client_endpoint_added_listeners.append(listener)
+  def address(self):
+    return self.__get_property('Address')
 
-  def on_client_endpoint_removed(self, listener):
-    self.__client_endpoint_removed_listeners.append(listener)
+  def device_class(self):
+    return self.__get_property('Class')
+
+  def on_device_connected(self, listener):
+    self.__on_device_connected_listeners.append(listener)
+
+  def on_device_disconnected(self, listener):
+    self.__on_device_disconnected_listeners.append(listener)
 
   def properties_changed(self, interface, changed, invalidated, path):
     if interface == Bluez5Utils.DEVICE_INTERFACE:
@@ -110,9 +120,9 @@ class Bluez5(ClassLogger):
     if 'Connected' in changed:
       connected = changed['Connected']
       if connected:
-        listeners = self.__client_endpoint_added_listeners
+        listeners = self.__on_device_connected_listeners
       else:
-        listeners = self.__client_endpoint_removed_listeners
+        listeners = self.__on_device_disconnected_listeners
 
       self.log().info('Device: ' + path + (' Connected' if connected else ' Disconnected'))
 
@@ -132,7 +142,7 @@ class Bluez5(ClassLogger):
   def __set_property(self, prop, value):
     self.__adapter_properties.Set(Bluez5Utils.ADAPTER_INTERFACE, prop, value)
 
-class PermissibleAgent(dbus.service.Object, ClassLogger):
+class Agent(dbus.service.Object, ClassLogger):
   __passcode = None
   __pincode = None
   __path = None
@@ -246,15 +256,18 @@ class Bluez5Utils:
 
   @staticmethod
   def find_adapter_in_objects(objects, pattern, bus):
+    if pattern:
+      pattern = pattern.upper()
     for path, ifaces in objects.iteritems():
       adapter = ifaces.get(Bluez5Utils.ADAPTER_INTERFACE)
       if adapter is None:
         continue
-      if not pattern or pattern == adapter["Address"] or \
-                path.endswith(pattern):
+      address = adapter['Address'].upper()
+      if not pattern or pattern == address or path.endswith(pattern):
         obj = bus.get_object(Bluez5Utils.SERVICE_NAME, path)
         return dbus.Interface(obj, Bluez5Utils.ADAPTER_INTERFACE)
-    raise Exception("Bluetooth adapter not found")
+    raise Exception('Bluetooth adapter not found: "' + \
+      pattern if pattern else '*' + '"')
 
   @staticmethod
   def find_device(device_address, adapter_pattern, bus):
