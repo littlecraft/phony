@@ -7,7 +7,7 @@ class Bluez5(ClassLogger):
   AGENT_PATH = '/phony/agent/bluez'
   __agent = None
 
-  __hci_device = None
+  __adapter_address = None
 
   __bus = None
 
@@ -19,9 +19,9 @@ class Bluez5(ClassLogger):
 
   __started = False
 
-  def __init__(self, bus_constructor, hci_device = None):
+  def __init__(self, bus_constructor, adapter_address = None):
     ClassLogger.__init__(self)
-    self.__hci_device = hci_device
+    self.__adapter_address = adapter_address
     self.__bus = bus_constructor.system_bus()
 
   def __enter__(self):
@@ -35,7 +35,7 @@ class Bluez5(ClassLogger):
     if self.__started:
       return
 
-    self.__adapter = Bluez5Utils.find_adapter(self.__hci_device, self.__bus)
+    self.__adapter = Bluez5Utils.find_adapter(self.__adapter_address, self.__bus)
 
     self.__adapter_properties = Bluez5Utils.properties(
       self.__adapter.object_path,
@@ -50,10 +50,22 @@ class Bluez5(ClassLogger):
       path_keyword = 'path'
     )
 
-    self.enable()
+    self.__bus.add_signal_receiver(
+      self.interfaces_added,
+      dbus_interface = Bluez5Utils.OBJECT_MANAGER_INTERFACE,
+      signal_name = 'InterfacesAdded'
+    )
+
+    self.__bus.add_signal_receiver(
+      self.interfaces_removed,
+      dbus_interface = Bluez5Utils.OBJECT_MANAGER_INTERFACE,
+      signal_name = 'InterfacesRemoved'
+    )
 
     if name:
       self.__set_property('Alias', name)
+
+    self.__set_property('Powered', True)
 
     self.__show_adapter_properties()
 
@@ -76,15 +88,6 @@ class Bluez5(ClassLogger):
 
     self.__started = False
 
-  def enable(self):
-    self.__set_property('Powered', True)
-
-  def disable(self):
-    self.__set_property('Powered', False)
-
-  def enabled(self):
-    return self.__get_property('Powered')
-
   @ClassLogger.TraceAs.event()
   def enable_pairability(self, timeout = 0):
     self.__set_property('Discoverable', True)
@@ -105,15 +108,12 @@ class Bluez5(ClassLogger):
   def pairable(self):
     return self.__get_property('Discoverable') and self.__get_property('Pairable')
 
-  def hci_device(self):
+  def hci_id(self):
     last_slash = self.__adapter.object_path.rfind('/')
     return self.__adapter.object_path[last_slash + 1:]
 
   def address(self):
     return self.__get_property('Address')
-
-  def device_class(self):
-    return self.__get_property('Class')
 
   @ClassLogger.TraceAs.call()
   def disconnect_all_devices(self):
@@ -127,24 +127,51 @@ class Bluez5(ClassLogger):
   def on_device_disconnected(self, listener):
     self.__on_device_disconnected_listeners.append(listener)
 
+  @ClassLogger.TraceAs.event()
   def properties_changed(self, interface, changed, invalidated, path):
-    if interface == Bluez5Utils.DEVICE_INTERFACE:
-      self.device_properties_changed(changed, path)
+    if interface != Bluez5Utils.DEVICE_INTERFACE:
+      return
 
-  def device_properties_changed(self, changed, path):
     if 'Connected' in changed:
       connected = changed['Connected']
+
       if connected:
-        listeners = self.__on_device_connected_listeners
+        self.log().info('Device: %s Connected' % path)
+        for listener in self.__on_device_connected_listeners:
+          device = Bluez5Utils.device(path, self.__bus)
+          device = Bluez5Device(device, self.__bus)
+          listener(device)
       else:
-        listeners = self.__on_device_disconnected_listeners
+        self.log().info('Device: %s Disconnected' % path)
+        for listener in self.__on_device_disconnected_listeners:
+          listener(path)
 
-      self.log().info('Device: ' + path + (' Connected' if connected else ' Disconnected'))
+  @ClassLogger.TraceAs.event()
+  def interfaces_added(self, path, interfaces):
+    if Bluez5Utils.DEVICE_INTERFACE not in interfaces:
+      return
 
-      for listener in listeners:
-        device = Bluez5Utils.device(path, self.__bus)
-        device = Bluez5Device(device, self.__bus)
-        listener(device)
+    if Bluez5Utils.is_child_device(self.__adapter, path):
+      self.log().info('New device added: %s' % path)
+
+      properties = interfaces[Bluez5Utils.DEVICE_INTERFACE]
+
+      if 'Connected' in properties and properties['Connected']:
+        for listener in self.__on_device_connected_listeners:
+          device = Bluez5Utils.device(path, self.__bus)
+          device = Bluez5Device(device, self.__bus)
+          listener(device)
+
+  @ClassLogger.TraceAs.event()
+  def interfaces_removed(self, path, interfaces):
+    if Bluez5Utils.DEVICE_INTERFACE not in interfaces:
+      return
+
+    if Bluez5Utils.is_child_device(self.__adapter, path):
+      self.log().info('Device removed: %s' % path)
+
+      for listener in self.__on_device_disconnected_listeners:
+        listener(path)
 
   def __find_connected_devices_and_notify(self):
     # This is mostly for development, in case the main application
@@ -161,7 +188,7 @@ class Bluez5(ClassLogger):
   def __find_connected_devices(self):
     connected_devices = []
 
-    devices = Bluez5Utils.get_known_devices(self.address(), self.__bus)
+    devices = Bluez5Utils.get_child_devices(self.address(), self.__bus)
     for device in devices:
       device = Bluez5Device(device, self.__bus)
 
@@ -172,7 +199,7 @@ class Bluez5(ClassLogger):
 
   def __show_adapter_properties(self):
     self.log().debug('Adapter Path: ' + self.__adapter.object_path)
-    self.log().debug('Adapter HCI handle: ' + self.hci_device())
+    self.log().debug('Adapter HCI Id: ' + self.hci_id())
     self.log().debug('Adapter Name: ' + self.__get_property('Name'))
     self.log().debug('Adapter Alias: ' + self.__get_property('Alias'))
     self.log().debug('Adapter Address: ' + self.__get_property('Address'))
@@ -270,7 +297,7 @@ class PermissibleAgent(dbus.service.Object, ClassLogger):
     self.log().debug("Cancel")
 
 class Bluez5Utils:
-  """bluez5-x.y/test/bluezutils.py"""
+  """See bluez5-x.y/test/bluezutils.py"""
 
   SERVICE_NAME = 'org.bluez'
   ADAPTER_INTERFACE = 'org.bluez.Adapter1'
@@ -281,6 +308,8 @@ class Bluez5Utils:
   PROPERTIES_INTERFACE = 'org.freedesktop.DBus.Properties'
 
   class UUID:
+    """Service UUIDs that a device may provide"""
+
     Base = '00000000-0000-1000-8000-00805F9B34FB'
     HandsFree = '0000111E-0000-1000-8000-00805F9B34FB'
     HandsFreeAudioGateway = '0000111F-0000-1000-8000-00805F9B34FB'
@@ -319,31 +348,37 @@ class Bluez5Utils:
       pattern if pattern else '*' + '"')
 
   @staticmethod
-  def get_known_devices(adapter_pattern, bus):
-    return Bluez5Utils.get_known_devices_in_objects(
+  def get_child_devices(adapter_pattern, bus):
+    return Bluez5Utils.get_child_devices_in_objects(
       Bluez5Utils.get_managed_objects(bus),
       adapter_pattern,
       bus
     )
 
   @staticmethod
-  def get_known_devices_in_objects(objects, adapter_pattern, bus):
+  def get_child_devices_in_objects(objects, adapter_pattern, bus):
     devices = []
 
-    path_prefix = ''
+    adapter = None
     if adapter_pattern:
       adapter = Bluez5Utils.find_adapter_in_objects(objects, adapter_pattern, bus)
-      path_prefix = adapter.object_path
+      if not adapter:
+        raise Exception('Adapter not found by pattern "%s"' % adapter_pattern)
+
     for path, ifaces in objects.iteritems():
       device = ifaces.get(Bluez5Utils.DEVICE_INTERFACE)
 
       if device is None:
         continue
 
-      if path.startswith(path_prefix):
+      if not adapter or Bluez5Utils.is_child_device(adapter, path):
         devices.append(Bluez5Utils.device(path, bus))
 
     return devices
+
+  @staticmethod
+  def is_child_device(adapter, device_path):
+    return device_path.startswith(adapter.object_path)
 
   @staticmethod
   def find_device(device_address, adapter_pattern, bus):
@@ -410,9 +445,10 @@ class Bluez5Device(ClassLogger):
   def dispose(self):
     try:
       self.disconnect()
-    except Exception, ex:
-      self.log().warn(str(ex))
+    except Exception:
+      pass
 
+  @ClassLogger.TraceAs.call()
   def disconnect(self):
     if self.connected():
       return self.__device.Disconnect()

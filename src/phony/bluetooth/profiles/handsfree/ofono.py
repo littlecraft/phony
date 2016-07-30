@@ -36,7 +36,6 @@ class State:
   def must_be(self, *one_of):
     if self.__state in one_of:
       return True
-
     raise Exception('Internal error: State %s is unexpected' % self)
 
   def __repr__(self):

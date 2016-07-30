@@ -76,10 +76,10 @@ class Headset(ClassLogger, dbus.service.Object):
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def device_connected(self, device):
 
-    if not device.provides_hfp_audio_gateway():
-      self.log().info('Disconnecting from "%s", does not support HFP AudioGateway' % device)
-      device.disconnect()
-      return
+    #if not device.provides_hfp_audio_gateway():
+    #  self.log().info('Disconnecting from "%s", does not support HFP AudioGateway' % device)
+    #  device.disconnect()
+    #  return
 
     if self.__device and device != self.__device:
       self.log().info('One device connection allowed.  Disconnecting from previous "%s"' % self.__device)
@@ -87,19 +87,28 @@ class Headset(ClassLogger, dbus.service.Object):
 
     self.__device = device
 
-    try:
-      self.__hfp.attach_audio_gateway(
-        self.__adapter,
-        self.__device,
-        self.audio_gateway_attached
-      )
-    except Exception, ex:
-      self.log().error('Attaching to HFP gateway failed: %s' % ex)
-      self.__reset()
+    #try:
+    #  self.__hfp.attach_audio_gateway(
+    #    self.__adapter,
+    #    self.__device,
+    #    self.audio_gateway_attached
+    #  )
+    #except Exception, ex:
+    #  self.log().error('Attaching to HFP gateway failed: %s' % ex)
+    #  self.__reset()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def device_disconnected(self, device):
-    if self.__device and device == self.__device:
+  def device_disconnected(self, device_path):
+    do_disconnect = False
+    try:
+      do_disconnect = self.__device and device_path == self.__device.path()
+    except Exception, ex:
+      # If an error occurs, it's likely because our current device
+      # has already gone away.
+      self.log().warn('Error during disconnect check: %s' % ex)
+      do_disconnect = True
+
+    if do_disconnect:
       self.__reset()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
@@ -108,13 +117,16 @@ class Headset(ClassLogger, dbus.service.Object):
 
   @ClassLogger.TraceAs.call()
   def __reset(self):
-    if self.__audio_gateway:
-      self.__audio_gateway.dispose()
-      self.__audio_gateway = None
+    try:
+      if self.__audio_gateway:
+        self.__audio_gateway.dispose()
+        self.__audio_gateway = None
 
-    if self.__device:
-      self.__device.dispose()
-      self.__device = None
+      if self.__device:
+        self.__device.dispose()
+        self.__device = None
+    except Exception, ex:
+      self.log().warn('Reset error: %s' % ex)
 
   def __exec(self, command):
     self.log().debug('Running: ' + command)

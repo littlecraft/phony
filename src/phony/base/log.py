@@ -159,7 +159,11 @@ class InstanceLogger(NamedLogger):
 
 def pretty_args(args, limit):
   def stringify(s):
-    s = str(s)
+    try:
+      s = str(s)
+    except:
+      s = '???'
+
     if len(s) > 0 and not (s[0] in string.printable):
       # Display the numeric value of the first unprintable character
       return str(ord(s[0]))
