@@ -1,21 +1,11 @@
 # phony
-A Python based bluetooth hands free telephone device, still in development.  Provides a bluetooth hands free profile service which turns your device (or linux machine) into a bluetooth hands free device, capable of making voice-dialed phone calls, with audio that is routed through your device's sound card.
+The goal of this module is to provide a convenient python based bluetooth Handsfree Profile service which allows you to 'roll your own' hands free device.  Just Hook up a button or switch, a microphon and a speaker up to a raspberry pi, and now you have a hands free 'head set' to play with.
 
 # Usage
-1. Install and run hfpd
-    1. ```git clone https://github.com/heinervdm/nohands.git```
-    1. ```$ cd nohands && ./configure && make```
-    1. ```$ cd hfpd```
-    1. ```$ ./hfpd -f```
-1. Let that run, and install dependencies and run this project
-    1. ```git clone https://github.com/littlecraft/phony.git```
-    1. Ensure that all packages in phony/packages.txt are installed
-    1. ```$ pip install virtualenv```
-    1. ```$ cd phony```
-    1. ```$ source ./env.sh```
-    1. ``` $ python src/main.py --name='MyBTHandsFreeDevice' [--interface=<bluetooth-mac-addr>] [--pin=<legacy-paring-pin>]```
+0. Ensure that you have an HFP capable bluetooth dongle or adapter (e.g. a CSR8510 A10, or BCM20702A0).  If you are using a BCM20702A0, you may need to ensure that an updated firmware payload is being used.  [See this discussion](http://plugable.com/2014/06/23/plugable-usb-bluetooth-adapter-solving-hfphsp-profile-issues-on-linux)
+1. Install bluez5.37, ofono1.17, pulseaudio8
+2. Edit /etc/pulse/default.pa, ```load-module module-bluetooth-discover headset=ofono```
+3. python src/main.py
 
 # Roadmap
-1. Establish audio & voice dialing with device (still in development)
-1. Event callback mechanism for ringing, answer, hangup, and initiating voice dialing
-1. Improve device auto-reconnect
+1. Raspberry pi GPIO hooks for ringer and hook
