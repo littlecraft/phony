@@ -88,6 +88,10 @@ class Bluez5(ClassLogger):
 
     self.__started = False
 
+  @ClassLogger.TraceAs.call()
+  def cancel_pending_operations(self):
+    pass
+
   @ClassLogger.TraceAs.event()
   def enable_pairability(self, timeout = 0):
     self.__set_property('Discoverable', True)
@@ -467,23 +471,6 @@ class Bluez5Device(ClassLogger):
 
   def paired(self):
     return self.__get_property('Paired')
-
-  def provides_hfp(self):
-    return self.provides_service(Bluez5Utils.UUID.HandsFree)
-
-  def provides_hfp_audio_gateway(self):
-    return self.provides_service(Bluez5Utils.UUID.HandsFreeAudioGateway)
-
-  def uuids(self):
-    return self.__get_property('UUIDs')
-
-  def provides_service(self, uuid):
-    uuid = uuid.lower()
-    for service in self.uuids():
-      if str(service).lower() == uuid:
-        return True
-
-    return False
 
   def __get_property(self, prop):
     return self.__properties.Get(Bluez5Utils.DEVICE_INTERFACE, prop)

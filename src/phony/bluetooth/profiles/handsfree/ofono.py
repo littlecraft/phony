@@ -100,12 +100,16 @@ class Ofono(ClassLogger):
 
   @ClassLogger.TraceAs.call()
   def stop(self):
-    self.__state = State.start()
+    self.transition_to(State.start())
+
+  @ClassLogger.TraceAs.call()
+  def cancel_pending_operations(self):
+    self.transition_to(State.start())
 
   @ClassLogger.TraceAs.call()
   def attach_audio_gateway(self, adapter, device, listener):
 
-    path, properties = self.__find_our_hfp_modem(adapter, device)
+    path, properties = self.__find_child_hfp_modem(adapter, device)
 
     if path:
       modem = dbus.Interface(
@@ -161,7 +165,7 @@ class Ofono(ClassLogger):
   @ClassLogger.TraceAs.event()
   def __modem_found(self, path, properties):
     if self.__state.is_waiting_for_modem_appearance():
-      if Ofono.__is_our_hfp_modem(self.__state.adapter, self.__state.device, path, properties):
+      if Ofono.__is_child_hfp_modem(self.__state.adapter, self.__state.device, path, properties):
         modem = dbus.Interface(
           self.__bus.get_object(self.SERVICE_NAME, path),
           self.MODEM_INTERFACE
@@ -192,14 +196,14 @@ class Ofono(ClassLogger):
           )
         )
 
-  def __find_our_hfp_modem(self, adapter, device):
+  def __find_child_hfp_modem(self, adapter, device):
     found_path = None
     found_properties = None
 
     modems = self.__manager.GetModems()
 
     for path, properties in modems:
-      if Ofono.__is_our_hfp_modem(adapter, device, path, properties):
+      if Ofono.__is_child_hfp_modem(adapter, device, path, properties):
         found_path = path
         found_properties = properties
         break
@@ -207,7 +211,7 @@ class Ofono(ClassLogger):
     return (found_path, found_properties)
 
   @staticmethod
-  def __is_our_hfp_modem(adapter, device, path, properties):
+  def __is_child_hfp_modem(adapter, device, path, properties):
     # TODO: Verify that the modem is attached to _both_
     # the adapter and remote device.  This is necessary
     # in cases where the host has more than one BT adapter.
