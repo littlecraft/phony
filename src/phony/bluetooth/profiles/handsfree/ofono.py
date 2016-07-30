@@ -7,9 +7,9 @@ from phony.base.log import ClassLogger, ScopedLogger, Levels
 
 class State:
   START = 0
-  BEGIN_ATTACH = 1
+  WAITING_FOR_MODEM_APPEARANCE = 1
   WAITING_FOR_MODEM_ONLINE = 2
-  WAITING_FOR_MODEM_APPEARANCE = 3
+  MODEM_IS_ONLINE = 3
 
   __state = START
 
@@ -18,42 +18,61 @@ class State:
   adapter = None
   device = None
 
-  def __init__(self, last = None, next_state = START):
-    if last:
-      self.audio_gateway_ready_listener = last.audio_gateway_ready_listener
-      self.modem = last.modem
-      self.adapter = last.adapter
-      self.device = last.device
-
+  def __init__(self, next_state = START):
     self.__state = next_state
 
-  def waiting_for_modem_online(self):
+  def is_at_start(self):
+    return self.__state == State.START
+
+  def is_waiting_for_modem_online(self):
     return self.__state == State.WAITING_FOR_MODEM_ONLINE
 
-  def waiting_for_modem_appearance(self):
+  def is_waiting_for_modem_appearance(self):
     return self.__state == State.WAITING_FOR_MODEM_APPEARANCE
 
+  def is_modem_online(self):
+    return self.__state == State.MODEM_IS_ONLINE
+
+  def must_be(self, *one_of):
+    if self.__state in one_of:
+      return True
+
+    raise Exception('Internal error: State %s is unexpected' % self)
+
+  def __repr__(self):
+    if self.__state == State.START:
+      return 'START'
+    elif self.__state == State.WAITING_FOR_MODEM_APPEARANCE:
+      return 'WAITING_FOR_MODEM_APPEARANCE'
+    elif self.__state == State.WAITING_FOR_MODEM_ONLINE:
+      return 'WAITING_FOR_MODEM_ONLINE'
+    elif self.__state == State.MODEM_IS_ONLINE:
+      return 'MODEM_IS_ONLINE'
+
   @staticmethod
-  def empty():
+  def start():
     return State()
 
   @staticmethod
-  def begin_attach(last_state, audio_gateway_ready_listener):
-    new_state = State(last_state, State.BEGIN_ATTACH)
+  def modem_found(modem, audio_gateway_ready_listener):
+    new_state = State(State.WAITING_FOR_MODEM_ONLINE)
+    new_state.modem = modem
     new_state.audio_gateway_ready_listener = audio_gateway_ready_listener
     return new_state
 
   @staticmethod
-  def modem_found(last_state, modem):
-    new_state = State(last_state, State.WAITING_FOR_MODEM_ONLINE)
-    new_state.modem = modem
+  def modem_not_found(adapter, device, audio_gateway_ready_listener):
+    new_state = State(State.WAITING_FOR_MODEM_APPEARANCE)
+    new_state.device = device
+    new_state.adapter = adapter
+    new_state.audio_gateway_ready_listener = audio_gateway_ready_listener
     return new_state
 
   @staticmethod
-  def modem_not_found(last_state, adapter, device):
-    new_state = State(last_state, State.WAITING_FOR_MODEM_APPEARANCE)
-    new_state.device = device
-    new_state.adapter = adapter
+  def modem_came_online(modem, audio_gateway_ready_listener):
+    new_state = State(State.MODEM_IS_ONLINE)
+    new_state.modem = modem
+    new_state.audio_gateway_ready_listener = audio_gateway_ready_listener
     return new_state
 
 class Ofono(ClassLogger):
@@ -66,7 +85,7 @@ class Ofono(ClassLogger):
   __bus = None
   __manager = None
 
-  __state = State.empty()
+  __state = State.start()
 
   def __init__(self, bus):
     ClassLogger.__init__(self)
@@ -80,17 +99,12 @@ class Ofono(ClassLogger):
       self.MANAGER_INTERFACE
     )
 
-    self.__manager.connect_to_signal('ModemAdded', self.__modem_found)
-    self.__manager.connect_to_signal('ModemRemoved', self.__modem_removed)
-
   @ClassLogger.TraceAs.call()
   def stop(self):
-    self.__state = State.empty()
+    self.__state = State.start()
 
   @ClassLogger.TraceAs.call()
-  def attach_audio_gateway(self, adapter, device, audio_gateway_ready_listener):
-
-    self.__state = State.begin_attach(self.__state, audio_gateway_ready_listener)
+  def attach_audio_gateway(self, adapter, device, listener):
 
     path, properties = self.__find_our_hfp_modem(adapter, device)
 
@@ -100,43 +114,84 @@ class Ofono(ClassLogger):
         self.MODEM_INTERFACE
       )
 
-      self.__state = State.modem_found(self.__state, modem)
-
       if properties['Online']:
-        self.log().debug('Found modem immediately!')
-
-        self.__modem_is_online()
+        self.transition_to(State.modem_came_online(modem, listener))
       else:
-        self.log().debug('Found modem, but it is offline, waiting for it to come online')
-
-        modem.connect_to_signal('PropertyChanged',
-          self.__wait_for_modem_online)
-
+        self.transition_to(State.modem_found(modem, listener))
     else:
-      self.log().debug('No modem found, waiting for one to appear')
+      self.transition_to(State.modem_not_found(adapter, device, listener))
 
-      self.__state = State.modem_not_found(self.__state, adapter, device)
+  def transition_to(self, new_state):
+    self.log().debug('State %s -> %s' % (self.__state, new_state))
+
+    previous_state = self.__state
+    self.__state = new_state
+
+    try:
+      if new_state.is_waiting_for_modem_appearance():
+        previous_state.must_be(State.START)
+
+        self.__manager.connect_to_signal('ModemAdded', self.__modem_found)
+
+      elif new_state.is_waiting_for_modem_online():
+        previous_state.must_be(State.START, State.WAITING_FOR_MODEM_APPEARANCE)
+
+        new_state.modem.connect_to_signal('PropertyChanged', self.__modem_online)
+
+      elif new_state.is_modem_online():
+        previous_state.must_be(
+          State.START,
+          State.WAITING_FOR_MODEM_APPEARANCE,
+          State.WAITING_FOR_MODEM_ONLINE
+        )
+
+        ag = OfonoHfpAg(new_state.modem.object_path, self.__bus)
+        new_state.audio_gateway_ready_listener(ag)
+
+        self.transition_to(State.start())
+      elif new_state.is_at_start():
+        pass
+
+      else:
+        self.__state = previous_state
+        raise Exception('Invalid state: ' % new_state)
+
+    except Exception, ex:
+      self.log().error('Invalid state transition: %s -> %s' % (previous_state, new_state))
 
   @ClassLogger.TraceAs.event()
   def __modem_found(self, path, properties):
-    pass
+    if self.__state.is_waiting_for_modem_appearance():
+      if Ofono.__is_our_hfp_modem(self.__state.adapter, self.__state.device, path, properties):
+        modem = dbus.Interface(
+          self.__bus.get_object(self.SERVICE_NAME, path),
+          self.MODEM_INTERFACE
+        )
 
-  @ClassLogger.TraceAs.event()
-  def __modem_removed(self, path):
-    pass
+        if properties['Online']:
+          self.transition_to(
+            State.modem_came_online(
+              modem,
+              self.__state.audio_gateway_ready_listener
+            )
+          )
+        else:
+          self.transition_to(
+            State.modem_found(
+              modem,
+              self.__state.audio_gateway_ready_listener
+            )
+          )
 
-  def __wait_for_modem_online(self, name, value):
-    if self.__state.waiting_for_modem_online():
+  def __modem_online(self, name, value):
+    if self.__state.is_waiting_for_modem_online():
       if name == 'Online' and value:
-        self.__modem_is_online()
-
-  def __modem_is_online(self):
-    self.log().debug('Modem is online, notifying...')
-
-    ag = OfonoHfpAg(self.__state.modem.object_path, self.__bus)
-    self.__state.audio_gateway_ready_listener(ag)
-
-    self.__state = State.empty()
+        self.transition_to(
+          State.modem_came_online(
+            self.__state.modem,
+            self.__state.audio_gateway_ready_listener
+          )
+        )
 
   def __find_our_hfp_modem(self, adapter, device):
     found_path = None

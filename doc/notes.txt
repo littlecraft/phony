@@ -1,0 +1,2 @@
+1) Ofono 1.18 and 1.19 appear to have some kind of memory bug (double free, etc) that occurs
+when a device is cold-paired from phony.

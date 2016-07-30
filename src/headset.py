@@ -94,8 +94,8 @@ class Headset(ClassLogger, dbus.service.Object):
         self.audio_gateway_attached
       )
     except Exception, ex:
+      self.log().error('Attaching to HFP gateway failed: %s' % ex)
       self.__reset()
-      raise ex
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def device_disconnected(self, device):
@@ -106,6 +106,7 @@ class Headset(ClassLogger, dbus.service.Object):
   def audio_gateway_attached(self, audio_gateway):
     self.__audio_gateway = audio_gateway
 
+  @ClassLogger.TraceAs.call()
   def __reset(self):
     if self.__audio_gateway:
       self.__audio_gateway.dispose()
