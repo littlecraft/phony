@@ -292,3 +292,14 @@ class OfonoHfpAg(ClassLogger):
     for feature in properties['Features']:
       features += feature + ' '
     self.log().info('Device HFP Features: %s' % features)
+
+  def __repr__(self):
+    info = 'Path: %s\n' % self.__path
+
+    properties = self.__hfp.GetProperties()
+    features = 'Features: '
+    for feature in properties['Features']:
+      features += feature + ' '
+
+    info += features
+    return info

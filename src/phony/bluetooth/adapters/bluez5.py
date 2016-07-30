@@ -215,6 +215,9 @@ class Bluez5(ClassLogger):
   def __set_property(self, prop, value):
     self.__adapter_properties.Set(Bluez5Utils.ADAPTER_INTERFACE, prop, value)
 
+  def __repr__(self):
+    return '%s %s' % (self.__get_property('Address'), self.__get_property('Name'))
+
 class PermissibleAgent(dbus.service.Object, ClassLogger):
   __passcode = None
   __pincode = None

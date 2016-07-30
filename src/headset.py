@@ -121,15 +121,45 @@ class Headset(ClassLogger, dbus.service.Object):
     self.log().debug('Running: ' + command)
     execute.privileged(command, shell = True)
 
+  #
+  # dbus debugging methods
+  #
+
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def BeginVoiceDial(self):
-    self.__hfp.begin_voice_dial()
+    if self.__audio_gateway:
+      self.__audio_gateway.begin_voice_dial()
+    else:
+      raise Exception('No audio gateway is connected')
 
   @dbus.service.method(dbus_interface = SERVICE_NAME,
     input_signature = 's')
   def Dial(self, number):
-    self.__hfp.dial(number)
+    if self.__audio_gateway:
+      self.__audio_gateway.dial(number)
+    else:
+      raise Exception('No audio gateway is connected')
 
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def HangUp(self):
-    self.__hfp.hangup()
+    if self.__audio_gateway:
+      self.__audio_gateway.hangup()
+    else:
+      raise Exception('No audio gateway is connected')
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME)
+  def Reset(self):
+    self.__reset()
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME, out_signature = 's')
+  def GetStatus(self):
+    status = ''
+
+    if self.__adapter:
+      status += 'Adapter:\n%s\n\n' % self.__adapter
+    if self.__device:
+      status += 'Device:\n%s\n\n' % self.__device
+    if self.__audio_gateway:
+      status += 'AG:\n%s\n\n' % self.__audio_gateway
+
+    return status
