@@ -64,31 +64,31 @@ class Levels:
       raise Exception('Unrecognized logging level: "' + str + '"')
 
 class ScopedLogger(object):
-  __label = ""
-  __level = None
-  __instance = None
+  _label = ""
+  _level = None
+  _instance = None
 
   def __init__(self, name_or_instance, scope_label, log_level = Levels.DEBUG):
     if isinstance(name_or_instance, basestring):
-      self.__instance = NamedLogger(name_or_instance)
+      self._instance = NamedLogger(name_or_instance)
     elif name_or_instance:
-      self.__instance = name_or_instance
+      self._instance = name_or_instance
     else:
       raise Exception('Must provide a name or logger class instance')
 
-    self.__label = scope_label
-    self.__level = log_level
+    self._label = scope_label
+    self._level = log_level
 
   def __enter__(self):
-    self.__instance.log().log(self.__level, "-> " + self.__label)
+    self._instance.log().log(self._level, "-> " + self._label)
 
   def __exit__(self, exc_type, exc_value, traceback):
-    self.__instance.log().log(self.__level, "<- " + self.__label)
+    self._instance.log().log(self._level, "<- " + self._label)
 
 class NamedLogger(object):
-  __log_name = ""
-  __log = None
-  __level = Levels.DEFAULT
+  _log_name = ""
+  _log = None
+  _level = Levels.DEFAULT
 
   class TraceAs:
     @staticmethod
@@ -132,20 +132,20 @@ class NamedLogger(object):
       return decorator
 
   def __init__(self, name):
-    self.__log_name = str(name)
-    self.__log = logging.getLogger(self.__log_name)
+    self._log_name = str(name)
+    self._log = logging.getLogger(self._log_name)
 
   def log(self):
-    return self.__log
+    return self._log
 
   def log_level(self, log_level = None):
     if log_level != None:
-      self.__level = log_level
+      self._level = log_level
 
-    return self.__level
+    return self._level
 
   def log_name(self):
-    return self.__log_name
+    return self._log_name
 
 class ClassLogger(NamedLogger):
   def __init__(self, label_maker = TypeLabel()):
