@@ -5,7 +5,13 @@ from dbus import service
 from phony.base import execute
 from phony.base.log import ClassLogger, ScopedLogger, Levels
 
-class Headset(ClassLogger, dbus.service.Object):
+class VoiceDialingHeadset(ClassLogger, dbus.service.Object):
+  """
+  Behaves like a bluetooth headset, allowing only one device
+  to connect/pair at a time, requiring that the device
+  provide HFP and voice-dialing capabilities.
+  """
+
   OBJECT_PATH = '/org/littlecraft/Phony'
   SERVICE_NAME = 'org.littlecraft.Phony'
 
@@ -100,7 +106,11 @@ class Headset(ClassLogger, dbus.service.Object):
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def audio_gateway_attached(self, audio_gateway):
-    self._hfp_audio_gateway = audio_gateway
+    if not audio_gateway.provides_voice_recognition():
+      self.log().info('Device %s does not provide voice dialing. Disconnecting...')
+      self._reset()
+    else:
+      self._hfp_audio_gateway = audio_gateway
 
   @ClassLogger.TraceAs.call()
   def _reset(self):

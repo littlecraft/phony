@@ -2,7 +2,7 @@ import os
 import dbus
 import gobject
 import argparse
-import headset
+import behavior
 import phony.base.ipc
 import phony.bluetooth.adapters
 import phony.bluetooth.profiles.handsfree
@@ -44,10 +44,10 @@ class ApplicationMain(ClassLogger):
 
     with phony.bluetooth.adapters.Bluez5(bus, args.interface) as adapter, \
          phony.bluetooth.profiles.handsfree.Ofono(bus) as hfp, \
-         headset.Headset(bus, adapter, hfp) as control:
+         behavior.VoiceDialingHeadset(bus, adapter, hfp) as headset:
 
-      control.start(args.name, args.pin)
-      control.enable_pairability(args.visibility_timeout)
+      headset.start(args.name, args.pin)
+      headset.enable_pairability(args.visibility_timeout)
 
       with ScopedLogger(self, 'main_loop'):
         self.main_loop().run()
