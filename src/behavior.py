@@ -5,7 +5,7 @@ from dbus import service
 from phony.base import execute
 from phony.base.log import ClassLogger, ScopedLogger, Levels
 
-class VoiceDialingHeadset(ClassLogger, dbus.service.Object):
+class HandsFreeHeadset(ClassLogger, dbus.service.Object):
   """
   Behaves like a bluetooth headset, allowing only one device
   to connect/pair at a time, requiring that the device
@@ -111,11 +111,11 @@ class VoiceDialingHeadset(ClassLogger, dbus.service.Object):
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _audio_gateway_attached(self, audio_gateway):
     if audio_gateway.provides_voice_recognition():
+      self._hfp_audio_gateway = audio_gateway
       audio_gateway.on_ringing_begin(self._ringing_began)
       audio_gateway.on_ringing_end(self._ringing_ended)
       audio_gateway.on_call_begin(self._call_began)
       audio_gateway.on_call_end(self._call_ended)
-      self._hfp_audio_gateway = audio_gateway
     else:
       self.log().info('Device %s does not provide voice dialing. Disconnecting...')
       self._reset()

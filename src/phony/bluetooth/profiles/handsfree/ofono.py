@@ -133,24 +133,25 @@ class OfonoHfpAg(ClassLogger):
 
     self._state = Fysom({
       'initial': 'idle',
-      'event': [
-        # Outgoing call events
-        {'name': 'outgoing_call',   'src': 'idle',       'dst': 'call began'},
-        {'name': 'hang_up',         'src': 'call began', 'dst': 'call ended'},
-        {'name': 'remote_hang_up',  'src': 'call began', 'dst': 'call ended'},
+      'events': [
+        # Incoming call event transitions
+        {'name': 'incoming',  'src': 'idle',          'dst': 'ringing'},
+        {'name': 'active',    'src': 'ringing',       'dst': 'call started'},
+        {'name': 'hungup',    'src': 'ringing',       'dst': 'call ended'},
 
-        # Incoming call events
-        {'name': 'incoming_call',   'src': 'idle',          'dst': 'ringing began'},
-        {'name': 'answer',          'src': 'ringing began', 'dst': 'ringing ended'},
-        {'name': 'remote_hang_up',  'src': 'ringing began', 'dst': 'ringing ended'},
-        {'name': 'answer',          'src': 'ringing ended', 'dst': 'call began'},
+        # Outgoing call event transitions
+        {'name': 'active',    'src': 'idle',          'dst': 'call started'},
 
-        {'name': 'reset',           'src': '*',             'dst': 'idle'}
+        # Active call event transitions
+        {'name': 'hungup',    'src': 'call started',  'dst': 'call ended'},
+        {'name': 'reset',     'src': '*',             'dst': 'idle'}
       ],
       'callbacks': {
-        'onoutgoing_call': self._on_outgoing_call,
-        'onhang_up': self._on_hang_up,
-        'onremote_hang_up': self._on_remote_hang_up
+        'onchangestate': self._on_change_state,
+        'onincoming': self._on_incoming,
+        'onactive': self._on_active,
+        'onhungup': self._on_hungup,
+        'onreset': self._on_reset
       }
     })
 
@@ -178,18 +179,6 @@ class OfonoHfpAg(ClassLogger):
     )
 
     self._show_properties()
-
-  @ClassLogger.TraceAs.call()
-  def _on_incoming_call(self, e):
-    pass
-
-  @ClassLogger.TraceAs.call()
-  def _on_hang_up(self, e):
-    pass
-
-  @ClassLogger.TraceAs.call()
-  def _on_remote_hang_up(self, e):
-    pass
 
   @ClassLogger.TraceAs.call()
   def dispose(self):
@@ -221,7 +210,7 @@ class OfonoHfpAg(ClassLogger):
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def answer(self):
-    if self._call and self._call.GetProperties()['State'] == 'incoming':
+    if self._call and self._state.isstate('ringing'):
       self._call.Answer()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
@@ -246,34 +235,47 @@ class OfonoHfpAg(ClassLogger):
       Ofono.VOICE_CALL_INTERFACE
     )
 
-    if properties['State'] == 'incoming':
-      for listener in self._on_ringing_begin_listeners:
-        listener()
-    elif properties['State'] == 'active':
-      for listener in self._on_call_began_listeners:
-        listener()
+    if properties['State'] in ['incoming', 'active']:
+      self._state.trigger(properties['State'])
 
   @ClassLogger.TraceAs.call()
   def _call_removed(self, path):
     if self._call and self._call.object_path == path:
-      for listener in self._on_call_ended_listeners:
-        listener()
-
-      self._call = None
+      self._state.hungup()
 
   @ClassLogger.TraceAs.call()
   def _call_properties_changed(self, property, value, path = None):
     if self._call and self._call.object_path == path:
-      if property == 'State':
-        if value == 'incoming':
-          for listener in self._on_ringing_begin_listeners:
-            listener()
-        elif value == 'active':
-          # TODO: Only send ringing end signal if previously ringing
-          for listener in self._on_ringing_end_listeners:
-            listener()
-          for listener in self._on_call_began_listeners:
-            listener()
+      if property == 'State' and value in ['incoming', 'active']:
+        self._state.trigger(value)
+
+  def _on_change_state(self, e):
+    self.log().debug('Transition "%s": %s -> %s' % (e.event, e.src, e.dst))
+
+  def _on_incoming(self, e):
+    for listener in self._on_ringing_begin_listeners:
+      listener()
+
+  def _on_active(self, e):
+    if e.src == 'ringing':
+      for listener in self._on_ringing_end_listeners:
+        listener()
+
+    for listener in self._on_call_began_listeners:
+      listener()
+
+  def _on_hungup(self, e):
+    if e.src == 'ringing':
+      for listener in self._on_ringing_end_listeners:
+        listener()
+
+    for listener in self._on_call_ended_listeners:
+      listener()
+
+    self._state.reset()
+
+  def _on_reset(self, e):
+    self._call = None
 
   def _show_properties(self):
     properties = self._hfp.GetProperties()

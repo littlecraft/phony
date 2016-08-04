@@ -44,7 +44,7 @@ class ApplicationMain(ClassLogger):
 
     with phony.bluetooth.adapters.Bluez5(bus, args.interface) as adapter, \
          phony.bluetooth.profiles.handsfree.Ofono(bus) as hfp, \
-         behavior.VoiceDialingHeadset(bus, adapter, hfp) as headset:
+         behavior.HandsFreeHeadset(bus, adapter, hfp) as headset:
 
       headset.start(args.name, args.pin)
       headset.enable_pairability(args.visibility_timeout)
