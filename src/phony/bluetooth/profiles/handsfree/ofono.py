@@ -1,7 +1,7 @@
 import dbus
 import gobject
 
-from phony.base.log import ClassLogger
+from phony.base.log import ClassLogger, Levels
 
 class Ofono(ClassLogger):
   SERVICE_NAME = 'org.ofono'
@@ -17,10 +17,10 @@ class Ofono(ClassLogger):
 
   _poll_for_child_hfp_modem_id = None
 
-  def __init__(self, bus):
+  def __init__(self, bus_provider):
     ClassLogger.__init__(self)
 
-    self._bus = bus.system_bus()
+    self._bus = bus_provider.system_bus()
 
   @ClassLogger.TraceAs.call()
   def start(self):
@@ -143,18 +143,18 @@ class OfonoHfpAg(ClassLogger):
   def provides_voice_recognition(self):
     return 'voice-recognition' in self._hfp.GetProperties()['Features']
 
-  @ClassLogger.TraceAs.event()
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def hangup(self):
     self._voice_call_manager.HangupAll()
 
-  @ClassLogger.TraceAs.event()
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def begin_voice_dial(self):
     if not self.provides_voice_recognition():
       raise Exception('Device does not support voice recognition')
 
     self._hfp.SetProperty('VoiceRecognition', True)
 
-  @ClassLogger.TraceAs.event()
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def dial(self, number):
     self._voice_call_manager.Dial(number, 'default')
 

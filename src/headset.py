@@ -18,10 +18,11 @@ class Headset(ClassLogger, dbus.service.Object):
   _device = None
   _hfp_audio_gateway = None
 
-  def __init__(self, bus, adapter, hfp):
+  def __init__(self, bus_provider, adapter, hfp):
     ClassLogger.__init__(self)
 
-    self._bus = bus.session_bus()
+    self._bus = bus_provider.session_bus()
+
     self._bus.request_name(self.SERVICE_NAME)
     bus_name = dbus.service.BusName(self.SERVICE_NAME, bus = self._bus)
     dbus.service.Object.__init__(self, bus_name, self.OBJECT_PATH)
@@ -122,7 +123,7 @@ class Headset(ClassLogger, dbus.service.Object):
     execute.privileged(command, shell = True)
 
   #
-  # dbus debugging methods
+  # dbus debugging interface
   #
 
   @dbus.service.method(dbus_interface = SERVICE_NAME)

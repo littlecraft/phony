@@ -1,11 +1,12 @@
 import cmd
 import sys
 import dbus
-
-PHONY_OBJECT_PATH = '/org/littlecraft/Phony'
-PHONY_SERVICE_NAME = 'org.littlecraft.Phony'
+import os
 
 class PhonyShell(cmd.Cmd):
+  PHONY_OBJECT_PATH = '/org/littlecraft/Phony'
+  PHONY_SERVICE_NAME = 'org.littlecraft.Phony'
+
   intro = 'Welcome to phony shell.  Type help or ? for list of commands.\n'
   prompt = '(phony) '
   bus = None
@@ -14,11 +15,17 @@ class PhonyShell(cmd.Cmd):
   def __init__(self):
     cmd.Cmd.__init__(self)
 
-    self.bus = dbus.SessionBus()
+    session_bus_path = os.environ.get('DBUS_SESSION_BUS_ADDRESS')
 
-    self.phony = self.bus.get_object(PHONY_SERVICE_NAME, PHONY_OBJECT_PATH)
-    if not self.phony:
-      raise Exception('Could not get %s' % PHONY_SERVICE_NAME)
+    if session_bus_path:
+      self.bus = dbus.SessionBus(session_bus_path)
+    else:
+      self.bus = dbus.SessionBus()
+
+    try:
+      self.phony = self.bus.get_object(self.PHONY_SERVICE_NAME, self.PHONY_OBJECT_PATH)
+    except Exception, ex:
+      raise Exception('Could not get %s: %s' % (self.PHONY_SERVICE_NAME, ex))
 
   def do_voice(self, arg):
     try:
@@ -52,6 +59,9 @@ class PhonyShell(cmd.Cmd):
       print str(ex)
 
   def do_exit(self, arg):
+    sys.exit()
+
+  def do_quit(self, arg):
     sys.exit()
 
 if __name__ == '__main__':

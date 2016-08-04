@@ -19,10 +19,10 @@ class Bluez5(ClassLogger):
 
   _started = False
 
-  def __init__(self, bus_constructor, adapter_address = None):
+  def __init__(self, bus_provider, adapter_address = None):
     ClassLogger.__init__(self)
     self._adapter_address = adapter_address
-    self._bus = bus_constructor.system_bus()
+    self._bus = bus_provider.system_bus()
 
   def __enter__(self):
     return self
