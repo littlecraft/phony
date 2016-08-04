@@ -105,7 +105,7 @@ class NamedLogger(object):
           label = label_maker.call(instance, method, args if with_arguments else None, width)
 
           with ScopedLogger(instance, label, log_level) as scope:
-            method(*args, **kwargs)
+           return method(*args, **kwargs)
 
         return call_wrapper
       return decorator
@@ -126,7 +126,7 @@ class NamedLogger(object):
 
           instance.log().log(level, label)
 
-          method(*args, **kwargs)
+          return method(*args, **kwargs)
 
         return call_wrapper
       return decorator

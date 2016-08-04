@@ -1,4 +1,5 @@
 import os
+import dbus
 import gobject
 import argparse
 import headset
@@ -35,7 +36,12 @@ class ApplicationMain(ClassLogger):
     # to automatically accept all pairing requests.
     #
 
+    dbus.mainloop.glib.threads_init()
+
     session_bus_path = os.environ.get('DBUS_SESSION_BUS_ADDRESS')
+    if session_bus_path:
+      self.log().info('DBUS_SESSION_BUS_ADDRESS=%s' % session_bus_path)
+
     bus = phony.base.ipc.Bus(session_bus_path)
 
     with phony.bluetooth.adapters.Bluez5(bus, args.interface) as adapter, \

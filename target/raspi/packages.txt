@@ -1,11 +1,13 @@
+# For phony
 python-gobject
 dbus-python
-ofono
 rfkill
 
-#pulseaudio
-#pulseaudio-module-bluetooth
+# For ofono
+glib2.0
+mobile-broadband-provider-info
 
+# For pulseaudio 7
 autoconf
 libtool
 intltool
