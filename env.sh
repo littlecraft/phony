@@ -14,3 +14,4 @@ export PYTHONPATH=$PYTHONPATH:./src
 
 #pip install pytest
 #pip install pytest-watch
+#pip install fysom

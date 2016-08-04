@@ -39,6 +39,12 @@ class PhonyShell(cmd.Cmd):
     except Exception, ex:
       print str(ex)
 
+  def do_answer(self, arg):
+    try:
+      self.phony.Answer()
+    except Exception, ex:
+      print str(ex)
+
   def do_hangup(self, arg):
     try:
       self.phony.HangUp()

@@ -36,8 +36,8 @@ class VoiceDialingHeadset(ClassLogger, dbus.service.Object):
     self._adapter = adapter
     self._hfp = hfp
 
-    adapter.on_device_connected(self.device_connected)
-    adapter.on_device_disconnected(self.device_disconnected)
+    adapter.on_device_connected(self._device_connected)
+    adapter.on_device_disconnected(self._deice_disconnected)
 
   def __enter__(self):
     return self
@@ -54,11 +54,15 @@ class VoiceDialingHeadset(ClassLogger, dbus.service.Object):
     self._hfp.start()
     self._adapter.start(name, pincode)
 
+    self._started = True
+
   def stop(self):
     if self._started:
       self._adapter.stop()
       self._hfp.stop()
       self._reset()
+
+      self._started = False
 
   def enable(self):
     self.log().info("Enabling radio")
@@ -81,7 +85,7 @@ class VoiceDialingHeadset(ClassLogger, dbus.service.Object):
     self._adapter.disable_pairability()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def device_connected(self, device):
+  def _device_connected(self, device):
 
     if self._device and device != self._device:
       self.log().info('One device connection allowed.  Disconnecting from previous "%s"' % self._device)
@@ -93,24 +97,44 @@ class VoiceDialingHeadset(ClassLogger, dbus.service.Object):
       self._hfp.attach_audio_gateway(
         self._adapter,
         self._device,
-        self.audio_gateway_attached
+        self._audio_gateway_attached
       )
     except Exception, ex:
       self.log().error('Error attaching to HFP gateway: %s' % ex)
       self._reset()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def device_disconnected(self, device_path):
+  def _deice_disconnected(self, device_path):
     if self._device and device_path == self._device.path():
       self._reset()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def audio_gateway_attached(self, audio_gateway):
-    if not audio_gateway.provides_voice_recognition():
+  def _audio_gateway_attached(self, audio_gateway):
+    if audio_gateway.provides_voice_recognition():
+      audio_gateway.on_ringing_begin(self._ringing_began)
+      audio_gateway.on_ringing_end(self._ringing_ended)
+      audio_gateway.on_call_begin(self._call_began)
+      audio_gateway.on_call_end(self._call_ended)
+      self._hfp_audio_gateway = audio_gateway
+    else:
       self.log().info('Device %s does not provide voice dialing. Disconnecting...')
       self._reset()
-    else:
-      self._hfp_audio_gateway = audio_gateway
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def _ringing_began(self):
+    pass
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def _ringing_ended(self):
+    pass
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def _call_began(self):
+    pass
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def _call_ended(self):
+    pass
 
   @ClassLogger.TraceAs.call()
   def _reset(self):
@@ -148,6 +172,13 @@ class VoiceDialingHeadset(ClassLogger, dbus.service.Object):
   def Dial(self, number):
     if self._hfp_audio_gateway:
       self._hfp_audio_gateway.dial(number)
+    else:
+      raise Exception('No audio gateway is connected')
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME)
+  def Answer(self):
+    if self._hfp_audio_gateway:
+      self._hfp_audio_gateway.answer()
     else:
       raise Exception('No audio gateway is connected')
 
