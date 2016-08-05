@@ -1,6 +1,7 @@
 # For phony
 python-gobject
 dbus-python
+python-rpi.gpio
 rfkill
 
 # For ofono

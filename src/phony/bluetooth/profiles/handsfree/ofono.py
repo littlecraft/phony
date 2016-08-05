@@ -225,6 +225,13 @@ class OfonoHfpAg(ClassLogger):
     self._hfp.SetProperty('VoiceRecognition', True)
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def end_voice_dial(self):
+    if not self.provides_voice_recognition():
+      raise Exception('Device does not support voice recognition')
+
+    self._hfp.SetProperty('VoiceRecognition', False)
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def dial(self, number):
     self._voice_call_manager.Dial(number, 'default')
 

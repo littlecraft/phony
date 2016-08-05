@@ -1,0 +1,12 @@
+Versions:
+  Kernel: 4.4.11-v7
+  Bluez: 5.23
+  Ofono: 1.17 (1.18 can throw "In progress exceptions")
+  Pulseaudio: 7 (8 crashes often)
+
+Edits:
+  Disable BCM sound device:
+    edit /etc/modprobe.d/raspi-blacklist.conf
+    add blacklist snd_bcm2835
+
+  Mute microphone in "Playback" mode (alsamixer)

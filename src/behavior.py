@@ -24,7 +24,7 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
   _device = None
   _hfp_audio_gateway = None
 
-  def __init__(self, bus_provider, adapter, hfp):
+  def __init__(self, bus_provider, adapter, hfp, hmi):
     ClassLogger.__init__(self)
 
     self._bus = bus_provider.session_bus()
@@ -37,7 +37,11 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
     self._hfp = hfp
 
     adapter.on_device_connected(self._device_connected)
-    adapter.on_device_disconnected(self._deice_disconnected)
+    adapter.on_device_disconnected(self._device_disconnected)
+
+    hmi.on_initiate_call(self._initiate_call)
+    hmi.on_answer(self._answer_call)
+    hmi.on_hangup(self._hangup_call)
 
   def __enter__(self):
     return self
@@ -84,6 +88,10 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
   def disable_pairability(self):
     self._adapter.disable_pairability()
 
+  #
+  # Bluetooth adapter event callbacks
+  #
+
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _device_connected(self, device):
 
@@ -104,7 +112,7 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
       self._reset()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def _deice_disconnected(self, device_path):
+  def _device_disconnected(self, device_path):
     if self._device and device_path == self._device.path():
       self._reset()
 
@@ -119,6 +127,10 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
     else:
       self.log().info('Device %s does not provide voice dialing. Disconnecting...')
       self._reset()
+
+  #
+  # Audio gateway event handlers:
+  #
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _ringing_began(self):
@@ -135,6 +147,30 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _call_ended(self):
     pass
+
+  #
+  # Control IO gesture event handlers
+  #
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def _answer_call(self):
+    if self._hfp_audio_gateway:
+      self._hfp_audio_gateway.answer()
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def _initiate_call(self):
+    if self._hfp_audio_gateway:
+      self._hfp_audio_gateway.begin_voice_dial()
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def _hangup_call(self):
+    if self._hfp_audio_gateway:
+      self._hfp_audio_gateway.hangup()
+      self._hfp_audio_gateway.end_voice_dial()
+
+  #
+  # Private methods
+  #
 
   @ClassLogger.TraceAs.call()
   def _reset(self):
