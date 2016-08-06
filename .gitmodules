@@ -1,0 +1,3 @@
+[submodule "ext/fysom"]
+	path = ext/fysom
+	url = https://github.com/littlecraft/fysom.git
