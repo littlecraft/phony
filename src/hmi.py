@@ -42,6 +42,12 @@ class TelephoneControls(ClassLogger):
   def _crank_pulsed(self):
     self._encoder_pulse_count += 1
 
+    # Provide event source label to speed up tracing
+    self.log().event(
+      'Pulse count = %d' % self._encoder_pulse_count,
+      'TelephoneControls._crank_pulsed()'
+    )
+
   def __enter__(self):
     return self
 

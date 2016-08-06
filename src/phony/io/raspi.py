@@ -50,7 +50,7 @@ class Inputs(ClassLogger):
   def on_pulse(self, channel_name, callback):
     self._pulse_callback_by_channel_name[channel_name] = callback
 
-  #@ClassLogger.TraceAs.call()
+  @ClassLogger.TraceAs.call()
   def _channel_changed(self, channel):
     name = self._inputs_by_channel[channel]['name']
     if GPIO.input(channel) and name in self._rising_callback_by_channel_name:

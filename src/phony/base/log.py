@@ -1,5 +1,6 @@
-import logging
 import string
+import logging
+import inspect
 
 from functools import wraps
 
@@ -22,7 +23,10 @@ class TypeLabel:
     else:
       args = ''
 
-    return type(instance).__name__ + '.' + method.__name__ + '(' + args + ')'
+    if not isinstance(method, basestring):
+      method = method.__name__
+
+    return type(instance).__name__ + '.' + method + '(' + args + ')'
 
 class InstanceLabel:
   def source(self, instance):
@@ -34,8 +38,11 @@ class InstanceLabel:
     else:
       args = ''
 
+    if not isinstance(method, basestring):
+      method = method.__name__
+
     type_and_instance = type(instance).__name__ + '.' + str(id(instance))
-    return type_and_instance + '.' + method.__name__ + '(' + args + ')'
+    return type_and_instance + '.' + method + '(' + args + ')'
 
 class Levels:
   CRITICAL = logging.CRITICAL
@@ -88,52 +95,49 @@ class ScopedLogger(object):
 class NamedLogger(object):
   _log_name = ""
   _log = None
+  _label_maker = None
   _level = Levels.DEFAULT
 
   class TraceAs:
     @staticmethod
-    def call(with_arguments = True, width = MAXIMUM_TRACE_WIDTH, log_level = Levels.DEFAULT, label_maker = TypeLabel()):
+    def call(with_arguments = True, width = MAXIMUM_TRACE_WIDTH, log_level = Levels.DEFAULT):
       def decorator(method):
         def call_wrapper(*args, **kwargs):
           instance = args[0]
 
-          if log_level == Levels.DEFAULT:
-            level = instance.log_level()
-          else:
-            level = log_level
-
-          label = label_maker.call(instance, method, args if with_arguments else None, width)
-
-          with ScopedLogger(instance, label, log_level) as scope:
+          with instance.log().call(method, args if with_arguments else None, width, log_level):
            return method(*args, **kwargs)
 
         return call_wrapper
       return decorator
 
     @staticmethod
-    def event(with_arguments = True, width = MAXIMUM_TRACE_WIDTH, log_level = Levels.DEFAULT, label_maker = TypeLabel()):
+    def event(with_arguments = True, width = MAXIMUM_TRACE_WIDTH, log_level = Levels.DEFAULT):
       def decorator(method):
         def call_wrapper(*args, **kwargs):
           instance = args[0]
 
-          if log_level == Levels.DEFAULT:
-            level = instance.log_level()
-          else:
-            level = log_level
-
-          label = label_maker.call(instance, method, args if with_arguments else None, width)
-          label = '** ' + label + ' **'
-
-          instance.log().log(level, label)
+          instance.log().call_event(method, args if with_arguments else None, width, log_level)
 
           return method(*args, **kwargs)
 
         return call_wrapper
       return decorator
 
-  def __init__(self, name):
-    self._log_name = str(name)
+  def __init__(self, name_or_label_maker):
+    if isinstance(name_or_label_maker, basestring):
+      self._log_name = str(name_or_label_maker)
+      self._label_maker = TypeLabel()
+    else:
+      self._log_name = name_or_label_maker.source(self)
+      self._label_maker = name_or_label_maker
+
     self._log = logging.getLogger(self._log_name)
+
+    # Add mixin methods to logger instance:
+    self._log.event = self._log_event
+    self._log.call = self._log_method_call
+    self._log.call_event = self._log_method_call_event
 
   def log(self):
     return self._log
@@ -146,6 +150,65 @@ class NamedLogger(object):
 
   def log_name(self):
     return self._log_name
+
+  def _log_event(self, msg, label = None, width = MAXIMUM_TRACE_WIDTH, level = Levels.DEFAULT):
+    if level == Levels.DEFAULT:
+      level = self.log_level()
+
+    if not label:
+      (instance, method_name, args) = NamedLogger._calling_instance_method_name_and_args(1)
+      label = self._label_maker.call(instance, method_name, args, width)
+
+    self._log.log(level, '** %s - %s **' % (label, msg))
+
+  def _log_method_call_event(self, method = None, args = None, width = MAXIMUM_TRACE_WIDTH, level = Levels.DEFAULT):
+    if level == Levels.DEFAULT:
+      level = self.log_level()
+
+    if not method:
+      (instance, method_name, args) = NamedLogger._calling_instance_method_name_and_args(1)
+      label = self._label_maker.call(instance, method_name, args, width)
+    else:
+      label = self._label_maker.call(self, method, args, width)
+
+    self._log.log(level, '** %s **' % label)
+
+  def _log_method_call(self, method = None, args = None, width = MAXIMUM_TRACE_WIDTH, level = Levels.DEFAULT):
+    if level == Levels.DEFAULT:
+      level = self.log_level()
+
+    if not method:
+      (instance, method_name, args) = NamedLogger._calling_instance_method_name_and_args(1)
+      label = self._label_maker.call(instance, method_name, args, width)
+    else:
+      label = self._label_maker.call(self, method, args, width)
+
+    return ScopedLogger(self, label, level)
+
+  @staticmethod
+  def _calling_instance_method_name_and_args(frame_level = 0):
+    clazz = ''
+    caller_args = []
+    method_name = ''
+
+    frame = NamedLogger._calling_frame(frame_level + 1)
+    frame_info = inspect.getframeinfo(frame)
+    method_name = frame_info[2]
+
+    args, _, _, values = inspect.getargvalues(frame)
+    if len(args) and args[0] == 'self':
+      instance = values.get('self', None)
+
+    caller_args = map(lambda arg: values[arg], args)
+
+    return (instance, method_name, caller_args)
+
+  @staticmethod
+  def _calling_frame(frame_level = 0):
+    cur_frame = inspect.currentframe()
+    calling_frame = inspect.getouterframes(cur_frame, frame_level + 2)
+
+    return calling_frame[1 + frame_level][0]
 
 class ClassLogger(NamedLogger):
   def __init__(self, label_maker = TypeLabel()):
@@ -175,38 +238,3 @@ def pretty_args(args, limit):
     return val[:limit] + '...'
   else:
     return val
-
-# def _log_public_method(method):
-#     @wraps(method)
-#     def wrapper(*a, **ka):
-#         self = a[0]
-
-#         log_it = False
-#         if not method.__name__.startswith("__"):
-#           log_it = True
-#           self.log().log(self.log_level(), "--> " + method.__name__)
-
-#         val = method(*a, **ka)
-
-#         if log_it:
-#           self.log().log(self.log_level(), "<-- " + method.__name__)
-
-#         return val
-
-#     return wrapper
-
-# class MethodLogger(type):
-#   def __new__(cls, cls_name, bases, attrs):
-#     for name, method in attrs.items():
-#       if callable(method):
-#         attrs[name] = _log_public_method(method)
-#       elif isinstance(method, (classmethod, staticmethod)):
-#         attrs[name] = type(method)(_log_public_method(method.__func__))
-#     return type.__new__(cls, cls_name, bases, attrs)
-
-# class ClassMethodLogger(ClassLogger):
-#   __metaclass__ = MethodLogger
-
-#   def __init__(self, log_level = Levels.DEBUG):
-#     ClassLogger.__init__(self)
-#     self.log_level(log_level)
