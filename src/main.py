@@ -19,6 +19,12 @@ class ApplicationMain(ClassLogger):
       'direction': 'input',
       'debounce': 300,
       'polarity': 'pull-up'
+    },
+    'crank_encoder': {
+      'pin': 26,
+      'direction': 'input',
+      'debounce': 200,
+      'polarity': 'pull-up'
     }
   }
 

@@ -8,12 +8,15 @@ class TelephoneControls(ClassLogger):
   _on_answer_listeners = []
   _on_hangup_listeners = []
 
+  _encoder_pulse_count = 0
+
   def __init__(self, io_inputs):
     ClassLogger.__init__(self)
 
     self._inputs = io_inputs
     self._inputs.on_rising_edge('hook_switch', self._off_hook)
     self._inputs.on_falling_edge('hook_switch', self._on_hook)
+    self._inputs.on_pulse('crank_encoder', self._crank_pulsed)
 
   def on_initiate_call(self, listener):
     self._on_initiate_call_listeners.append(listener)
@@ -35,6 +38,9 @@ class TelephoneControls(ClassLogger):
   def _on_hook(self):
     for listener in self._on_hangup_listeners:
       listener()
+
+  def _crank_pulsed(self):
+    self._encoder_pulse_count += 1
 
   def __enter__(self):
     return self
