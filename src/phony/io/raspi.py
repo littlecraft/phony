@@ -1,3 +1,4 @@
+import time
 import copy
 import gobject
 
@@ -50,12 +51,19 @@ class Inputs(ClassLogger):
   def on_pulse(self, channel_name, callback):
     self._pulse_callback_by_channel_name[channel_name] = callback
 
-  @ClassLogger.TraceAs.call()
+  #@ClassLogger.TraceAs.call()
   def _channel_changed(self, channel):
     name = self._inputs_by_channel[channel]['name']
-    if GPIO.input(channel) and name in self._rising_callback_by_channel_name:
+
+    do_rise = name in self._rising_callback_by_channel_name
+    do_fall = name in self._falling_callback_by_channel_name
+
+    if do_rise or do_fall:
+      time.sleep(0.01)
+
+    if GPIO.input(channel) and do_rise:
       self._rising_callback_by_channel_name[name]()
-    elif name in self._falling_callback_by_channel_name:
+    elif do_fall:
       self._falling_callback_by_channel_name[name]()
 
     if name in self._pulse_callback_by_channel_name:

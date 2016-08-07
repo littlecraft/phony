@@ -17,13 +17,13 @@ class ApplicationMain(ClassLogger):
     'hook_switch': {
       'pin': 21,
       'direction': 'input',
-      'debounce': 300,
+      'debounce': 200,
       'polarity': 'pull-up'
     },
-    'crank_encoder': {
+    'hand_crank_encoder': {
       'pin': 26,
       'direction': 'input',
-      'debounce': 200,
+      'debounce': 50,
       'polarity': 'pull-up'
     }
   }
