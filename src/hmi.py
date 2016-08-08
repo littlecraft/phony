@@ -72,10 +72,10 @@ class TelephoneControls(ClassLogger):
   def _on_hand_crank_pulsed(self, e):
     self._encoder_pulse_count += 1
 
-    # Provide event source label to speed up tracing
-    self.log().event(
-      'Pulse count = %d' % self._encoder_pulse_count,
-      'TelephoneControls._on_hand_crank_pulsed()'
+    self.log().variable(
+      '_encoder_pulse_count',
+      self._encoder_pulse_count,
+      label = None
     )
 
     if self._encoder_pulse_count % TelephoneControls.ENCODER_PULSES_TO_INTITATE_CALL == 0:
@@ -91,18 +91,14 @@ class TelephoneControls(ClassLogger):
 
   def _swich_hook_high(self):
     self._state.off_hook()
-    #for listener in self._on_answer_listeners:
-    #  listener()
 
   def _switch_hook_low(self):
     self._state.on_hook()
-    #for listener in self._on_hangup_listeners:
-    #  listener()
 
   def _encoder_pulsed(self):
-    try:
+    if self._state.can('hand_crank_pulsed'):
       self._state.hand_crank_pulsed()
-    except:
+    else:
       self.log().debug('Ignore crank pulse')
 
   def __enter__(self):

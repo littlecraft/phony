@@ -117,7 +117,7 @@ class NamedLogger(object):
         def call_wrapper(*args, **kwargs):
           instance = args[0]
 
-          instance.log().call_event(method, args if with_arguments else None, width, log_level)
+          instance.log().event(method, args if with_arguments else None, width, log_level)
 
           return method(*args, **kwargs)
 
@@ -135,9 +135,9 @@ class NamedLogger(object):
     self._log = logging.getLogger(self._log_name)
 
     # Add mixin methods to logger instance:
-    self._log.event = self._log_event
+    self._log.variable = self._variable
+    self._log.event = self._log_event_with_method_label
     self._log.call = self._log_method_call
-    self._log.call_event = self._log_method_call_event
 
   def log(self):
     return self._log
@@ -151,23 +151,26 @@ class NamedLogger(object):
   def log_name(self):
     return self._log_name
 
-  def _log_event(self, msg, label = None, width = MAXIMUM_TRACE_WIDTH, level = Levels.DEFAULT):
+  def _variable(self, variable, value, label = '', with_arguments = True, width = MAXIMUM_TRACE_WIDTH, level = Levels.DEFAULT):
     if level == Levels.DEFAULT:
       level = self.log_level()
 
-    if not label:
+    if label == '':
       (instance, method_name, args) = NamedLogger._calling_instance_method_name_and_args(1)
-      label = self._label_maker.call(instance, method_name, args, width)
+      label = self._label_maker.call(instance, method_name, args if with_arguments else None, width)
 
-    self._log.log(level, '** %s - %s **' % (label, msg))
+    if label:
+      self._log.log(level, '%s => %s = %s' % (label, variable, value))
+    else:
+      self._log.log(level, '%s = %s' % (variable, value))
 
-  def _log_method_call_event(self, method = None, args = None, width = MAXIMUM_TRACE_WIDTH, level = Levels.DEFAULT):
+  def _log_event_with_method_label(self, method = None, args = None, width = MAXIMUM_TRACE_WIDTH, level = Levels.DEFAULT):
     if level == Levels.DEFAULT:
       level = self.log_level()
 
     if not method:
       (instance, method_name, args) = NamedLogger._calling_instance_method_name_and_args(1)
-      label = self._label_maker.call(instance, method_name, args, width)
+      label = self._label_maker.call(instance, method_name, args if with_arguments else None, width)
     else:
       label = self._label_maker.call(self, method, args, width)
 
@@ -179,7 +182,7 @@ class NamedLogger(object):
 
     if not method:
       (instance, method_name, args) = NamedLogger._calling_instance_method_name_and_args(1)
-      label = self._label_maker.call(instance, method_name, args, width)
+      label = self._label_maker.call(instance, method_name, args if with_arguments else None, width)
     else:
       label = self._label_maker.call(self, method, args, width)
 
