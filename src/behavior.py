@@ -42,6 +42,7 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
     hmi.on_initiate_call(self._initiate_call)
     hmi.on_answer(self._answer_call)
     hmi.on_hangup(self._hangup_call)
+    hmi.on_hard_reset(self._hard_reset)
 
   def __enter__(self):
     return self
@@ -164,33 +165,16 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _hangup_call(self):
-    if self._hfp_audio_gateway:
-      self._hfp_audio_gateway.hangup()
-      self._hfp_audio_gateway.end_voice_dial()
-
-  #
-  # Private methods
-  #
-
-  @ClassLogger.TraceAs.call()
-  def _reset(self):
     try:
-      self._adapter.cancel_pending_operations()
-      self._hfp.cancel_pending_operations()
-
       if self._hfp_audio_gateway:
-        self._hfp_audio_gateway.dispose()
-        self._hfp_audio_gateway = None
-
-      if self._device:
-        self._device.dispose()
-        self._device = None
+        self._hfp_audio_gateway.hangup()
+        self._hfp_audio_gateway.end_voice_dial()
     except Exception, ex:
-      self.log().warn('Reset error: %s' % ex)
+      self.log().debug('Error caught while hanging up: %s' % ex)
 
-  def _exec(self, command):
-    self.log().debug('Running: ' + command)
-    execute.privileged(command, shell = True)
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def _hard_reset(self):
+    self._reset()
 
   #
   # dbus debugging interface
@@ -241,3 +225,27 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
       status += 'AG:\n%s\n\n' % self._hfp_audio_gateway
 
     return status
+
+  #
+  # Private methods
+  #
+
+  @ClassLogger.TraceAs.call()
+  def _reset(self):
+    try:
+      self._adapter.cancel_pending_operations()
+      self._hfp.cancel_pending_operations()
+
+      if self._hfp_audio_gateway:
+        self._hfp_audio_gateway.dispose()
+        self._hfp_audio_gateway = None
+
+      if self._device:
+        self._device.dispose()
+        self._device = None
+    except Exception, ex:
+      self.log().warn('Reset error: %s' % ex)
+
+  def _exec(self, command):
+    self.log().debug('Running: ' + command)
+    execute.privileged(command, shell = True)

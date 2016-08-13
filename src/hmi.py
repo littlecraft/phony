@@ -10,6 +10,7 @@ class TelephoneControls(ClassLogger):
   _on_initiate_call_listeners = []
   _on_answer_listeners = []
   _on_hangup_listeners = []
+  _on_hard_reset_listeners = []
 
   _encoder_pulse_count = 0
 
@@ -25,7 +26,7 @@ class TelephoneControls(ClassLogger):
         {'name': 'hand_crank_pulsed', 'src': 'ready',   'dst': '='},
         {'name': 'initiate_call',     'src': 'ready',   'dst': 'call_initiated'},
         {'name': 'on_hook',           'src': '*',       'dst': 'idle'},
-        {'name': 'reset',             'src': '*',       'dst': 'idle'}
+        {'name': 'hard_reset',        'src': '*',       'dst': '='}
       ],
       'callbacks': {
         'onchangestate': self._on_change_state,
@@ -33,7 +34,8 @@ class TelephoneControls(ClassLogger):
         'onoff_hook': self._on_off_hook,
         'onhand_crank_pulsed': self._on_hand_crank_pulsed,
         'oninitiate_call': self._on_initiate_call,
-        'onon_hook': self._on_on_hook
+        'onon_hook': self._on_on_hook,
+        'onhard_reset': self._on_hard_reset
       }
     })
 
@@ -41,6 +43,7 @@ class TelephoneControls(ClassLogger):
     self._inputs.on_rising_edge('hook_switch', self._swich_hook_high)
     self._inputs.on_falling_edge('hook_switch', self._switch_hook_low)
     self._inputs.on_pulse('hand_crank_encoder', self._encoder_pulsed)
+    self._inputs.on_falling_edge('reset_switch', self._rest_switch_pressed)
 
   def on_initiate_call(self, listener):
     self._on_initiate_call_listeners.append(listener)
@@ -50,6 +53,9 @@ class TelephoneControls(ClassLogger):
 
   def on_hangup(self, listener):
     self._on_hangup_listeners.append(listener)
+
+  def on_hard_reset(self, listener):
+    self._on_hard_reset_listeners.append(listener)
 
   #
   # State change callbacks
@@ -85,6 +91,10 @@ class TelephoneControls(ClassLogger):
     for listener in self._on_initiate_call_listeners:
       listener()
 
+  def _on_hard_reset(self, e):
+    for listener in self._on_hard_reset_listeners:
+      listener()
+
   #
   # Low-level IO callbacks
   #
@@ -100,6 +110,9 @@ class TelephoneControls(ClassLogger):
       self._state.hand_crank_pulsed()
     else:
       self.log().debug('Ignore crank pulse')
+
+  def _rest_switch_pressed(self):
+    self._state.hard_reset()
 
   def __enter__(self):
     return self

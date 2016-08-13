@@ -1,6 +1,8 @@
 import os
+import sys
 import hmi
 import dbus
+import signal
 import gobject
 import argparse
 import behavior
@@ -14,6 +16,12 @@ from phony.base.log import ClassLogger, ScopedLogger
 
 class ApplicationMain(ClassLogger):
   pin_layout = {
+    'reset_switch': {
+      'pin': 20,
+      'direction': 'input',
+      'debounce': 200,
+      'polarity': 'pull-up'
+    },
     'hook_switch': {
       'pin': 21,
       'direction': 'input',
@@ -34,7 +42,13 @@ class ApplicationMain(ClassLogger):
   def main_loop(self):
     return gobject.MainLoop()
 
+  def sigint_handler(self, signal, frame):
+    self.log().info('SIGINT, exiting...')
+    sys.exit(1)
+
   def run(self):
+    signal.signal(signal.SIGINT, self.sigint_handler)
+
     parser = argparse.ArgumentParser(description = 'Bluetooth Handsfree telephony service')
     parser.add_argument('--interface', help = 'The BT interface to listen on')
     parser.add_argument('--name', help = 'The name to advertise')

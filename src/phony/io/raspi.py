@@ -61,10 +61,16 @@ class Inputs(ClassLogger):
     if do_rise or do_fall:
       time.sleep(0.01)
 
-    if GPIO.input(channel) and do_rise:
-      self._rising_callback_by_channel_name[name]()
-    elif do_fall:
-      self._falling_callback_by_channel_name[name]()
+      if GPIO.input(channel):
+        high = 1
+      else:
+        high = 0
+
+      if high and do_rise:
+        self._rising_callback_by_channel_name[name]()
+
+      if not high and do_fall:
+        self._falling_callback_by_channel_name[name]()
 
     if name in self._pulse_callback_by_channel_name:
       self._pulse_callback_by_channel_name[name]()
