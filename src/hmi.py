@@ -2,21 +2,16 @@
 from fysom import Fysom
 from phony.base.log import ClassLogger
 
-class TelephoneControls(ClassLogger):
+class HandCrankTelephoneControls(ClassLogger):
   ENCODER_PULSES_TO_INTITATE_CALL = 8
 
   _inputs = None
-
-  _on_initiate_call_listeners = []
-  _on_answer_listeners = []
-  _on_hangup_listeners = []
-  _on_hard_reset_listeners = []
+  _headset = None
 
   _encoder_pulse_count = 0
-
   _state = None
 
-  def __init__(self, io_inputs):
+  def __init__(self, io_inputs, headset):
     ClassLogger.__init__(self)
 
     self._state = Fysom({
@@ -39,23 +34,13 @@ class TelephoneControls(ClassLogger):
       }
     })
 
+    self._headset = headset
+
     self._inputs = io_inputs
     self._inputs.on_rising_edge('hook_switch', self._swich_hook_high)
     self._inputs.on_falling_edge('hook_switch', self._switch_hook_low)
     self._inputs.on_pulse('hand_crank_encoder', self._encoder_pulsed)
     self._inputs.on_falling_edge('reset_switch', self._rest_switch_pressed)
-
-  def on_initiate_call(self, listener):
-    self._on_initiate_call_listeners.append(listener)
-
-  def on_answer(self, listener):
-    self._on_answer_listeners.append(listener)
-
-  def on_hangup(self, listener):
-    self._on_hangup_listeners.append(listener)
-
-  def on_hard_reset(self, listener):
-    self._on_hard_reset_listeners.append(listener)
 
   #
   # State change callbacks
@@ -68,12 +53,10 @@ class TelephoneControls(ClassLogger):
     self._encoder_pulse_count = 0
 
   def _on_off_hook(self, e):
-    for listener in self._on_answer_listeners:
-      listener()
+    self._headset.answer_call()
 
   def _on_on_hook(self, e):
-    for listener in self._on_hangup_listeners:
-      listener()
+    self._headset.hangup_call()
 
   def _on_hand_crank_pulsed(self, e):
     self._encoder_pulse_count += 1
@@ -88,12 +71,10 @@ class TelephoneControls(ClassLogger):
       self._state.initiate_call()
 
   def _on_initiate_call(self, e):
-    for listener in self._on_initiate_call_listeners:
-      listener()
+    self._headset.initiate_call()
 
   def _on_hard_reset(self, e):
-    for listener in self._on_hard_reset_listeners:
-      listener()
+    self._headset.reset()
 
   #
   # Low-level IO callbacks

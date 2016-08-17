@@ -1,11 +1,14 @@
 import os
 import sys
-import hmi
 import dbus
 import signal
 import gobject
 import argparse
-import behavior
+
+import hmi
+import debug
+import headset
+
 import phony.base.ipc
 import phony.io.raspi
 import phony.audio.alsa
@@ -54,8 +57,8 @@ class ApplicationMain(ClassLogger):
     parser.add_argument('--interface', help = 'The BT interface to listen on')
     parser.add_argument('--name', help = 'The name to advertise')
     parser.add_argument('--pin', help = 'Pin code to use when Simple Pairing mode is not enabled and/or unsupported by remote client')
-    parser.add_argument('--visibility-timeout', default = 0, help = 'Duration (seconds) to remain visible and pairable (default is 0, no timeout)')
-    parser.add_argument('--audio-card-index', default = -1, help = 'ALSA audio card index to use for capture and playback')
+    parser.add_argument('--visibility-timeout', default = 0, type = int, help = 'Duration (seconds) to remain visible and pairable (default is 0, no timeout)')
+    parser.add_argument('--audio-card-index', default = -1, type = int, help = 'ALSA audio card index to use for capture and playback')
     parser.add_argument('--log-level', default = 'DEFAULT', help = 'Logging level: DEFAULT, CRITICAL, ERROR, WARNING, INFO, DEBUG')
 
     args = parser.parse_args()
@@ -77,16 +80,18 @@ class ApplicationMain(ClassLogger):
 
     with phony.bluetooth.adapters.Bluez5(bus, args.interface) as adapter, \
          phony.bluetooth.profiles.handsfree.Ofono(bus) as hfp, \
-         phony.audio.alsa.Alsa(int(args.audio_card_index)) as audio, \
-         phony.io.raspi.Inputs(self.pin_layout) as inputs, \
-         hmi.TelephoneControls(inputs) as controls, \
-         behavior.HandsFreeHeadset(bus, adapter, hfp, audio, controls) as headset:
+         phony.audio.alsa.Alsa(args.audio_card_index) as audio, \
+         headset.HandsFreeHeadset(bus, adapter, hfp, audio) as hands_free_headset:
 
-      headset.start(args.name, args.pin)
-      headset.enable_pairability(int(args.visibility_timeout))
+      hands_free_headset.start(args.name, args.pin)
+      hands_free_headset.enable_pairability(args.visibility_timeout)
 
-      with ScopedLogger(self, 'main_loop'):
-        self.main_loop().run()
+      with phony.io.raspi.Inputs(self.pin_layout) as io_inputs, \
+           hmi.HandCrankTelephoneControls(io_inputs, hands_free_headset) as controls, \
+           debug.DbusDebugInterface(bus, hands_free_headset) as debug_interface:
+
+        with ScopedLogger(self, 'main_loop'):
+          self.main_loop().run()
 
 if __name__ == '__main__':
   main = ApplicationMain()
