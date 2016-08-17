@@ -8,6 +8,7 @@ import argparse
 import behavior
 import phony.base.ipc
 import phony.io.raspi
+import phony.audio.alsa
 import phony.bluetooth.adapters
 import phony.bluetooth.profiles.handsfree
 
@@ -75,9 +76,10 @@ class ApplicationMain(ClassLogger):
 
     with phony.bluetooth.adapters.Bluez5(bus, args.interface) as adapter, \
          phony.bluetooth.profiles.handsfree.Ofono(bus) as hfp, \
+         phony.audio.alsa.Alsa(args.audio_device_name) as audio, \
          phony.io.raspi.Inputs(self.pin_layout) as inputs, \
          hmi.TelephoneControls(inputs) as controls, \
-         behavior.HandsFreeHeadset(bus, adapter, hfp, controls) as headset:
+         behavior.HandsFreeHeadset(bus, adapter, hfp, audio, controls) as headset:
 
       headset.start(args.name, args.pin)
       headset.enable_pairability(args.visibility_timeout)

@@ -20,11 +20,12 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
 
   _adapter = None
   _hfp = None
+  _audio = None
 
   _device = None
   _hfp_audio_gateway = None
 
-  def __init__(self, bus_provider, adapter, hfp, hmi):
+  def __init__(self, bus_provider, adapter, hfp, audio, hmi):
     ClassLogger.__init__(self)
 
     self._bus = bus_provider.session_bus()
@@ -35,6 +36,7 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
 
     self._adapter = adapter
     self._hfp = hfp
+    self._audio = audio
 
     adapter.on_device_connected(self._device_connected)
     adapter.on_device_disconnected(self._device_disconnected)
@@ -56,6 +58,7 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
       return
 
     self.enable()
+    self._audio.start()
     self._hfp.start()
     self._adapter.start(name, pincode)
 
@@ -156,17 +159,20 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _answer_call(self):
     if self._hfp_audio_gateway:
+      self._audio.unmute_microphone()
       self._hfp_audio_gateway.answer()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _initiate_call(self):
     if self._hfp_audio_gateway:
+      self._audio.unmute_microphone()
       self._hfp_audio_gateway.begin_voice_dial()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _hangup_call(self):
     try:
       if self._hfp_audio_gateway:
+        self._audio.mute_microphone()
         self._hfp_audio_gateway.hangup()
         self._hfp_audio_gateway.end_voice_dial()
     except Exception, ex:
@@ -175,6 +181,31 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _hard_reset(self):
     self._reset()
+
+  #
+  # Private methods
+  #
+
+  @ClassLogger.TraceAs.call()
+  def _reset(self):
+    try:
+      self._audio.mute_microphone()
+      self._adapter.cancel_pending_operations()
+      self._hfp.cancel_pending_operations()
+
+      if self._hfp_audio_gateway:
+        self._hfp_audio_gateway.dispose()
+        self._hfp_audio_gateway = None
+
+      if self._device:
+        self._device.dispose()
+        self._device = None
+    except Exception, ex:
+      self.log().warn('Reset error: %s' % ex)
+
+  def _exec(self, command):
+    self.log().debug('Running: ' + command)
+    execute.privileged(command, shell = True)
 
   #
   # dbus debugging interface
@@ -225,27 +256,3 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
       status += 'AG:\n%s\n\n' % self._hfp_audio_gateway
 
     return status
-
-  #
-  # Private methods
-  #
-
-  @ClassLogger.TraceAs.call()
-  def _reset(self):
-    try:
-      self._adapter.cancel_pending_operations()
-      self._hfp.cancel_pending_operations()
-
-      if self._hfp_audio_gateway:
-        self._hfp_audio_gateway.dispose()
-        self._hfp_audio_gateway = None
-
-      if self._device:
-        self._device.dispose()
-        self._device = None
-    except Exception, ex:
-      self.log().warn('Reset error: %s' % ex)
-
-  def _exec(self, command):
-    self.log().debug('Running: ' + command)
-    execute.privileged(command, shell = True)

@@ -13,6 +13,9 @@ def send_to_stdout(level = logging.DEBUG):
     datefmt = '%Y-%m-%d %H:%M:%S'
   )
 
+def static(name):
+  return logging.getLogger(name)
+
 class TypeLabel:
   def source(self, instance):
     return instance.__module__ + '.' + type(instance).__name__

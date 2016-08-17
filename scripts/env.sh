@@ -13,7 +13,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #pip install pytest
 #pip install pytest-watch
 #pip install fysom
+#pip install pyalsaaudio
 
 export PYTHONPATH=$PYTHONPATH:$DIR/../src
-export PYTHONPATH=$PYTHONPATH:$DIR/../ext/fysom/main/python
 #export PATH=$PATH:$VIRTUAL_BIN
