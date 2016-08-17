@@ -51,6 +51,18 @@ class PhonyShell(cmd.Cmd):
     except Exception, ex:
       print str(ex)
 
+  def do_mute(self, arg):
+    try:
+      self.phony.Mute()
+    except Exception, ex:
+      print str(ex)
+
+  def do_unmute(self, arg):
+    try:
+      self.phony.Unmute()
+    except Exception, ex:
+      print str(ex)
+
   def do_reset(self, arg):
     try:
       self.phony.Reset()

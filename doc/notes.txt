@@ -1,2 +1,14 @@
 1) Ofono 1.18 and 1.19 appear to have some kind of memory bug (double free, etc) that occurs
 when a device is cold-paired from phony.
+
+PulseAudio:
+
+1) Edit /etc/pulse/default.pa
+
+.ifexists module-bluetooth-discover.so
+load-module module-bluetooth-discover headset=ofono
+.endif
+
+2) Edit /etc/pulse/daemon.conf
+
+exit-idle-time = -1

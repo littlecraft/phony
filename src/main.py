@@ -55,6 +55,7 @@ class ApplicationMain(ClassLogger):
     parser.add_argument('--name', help = 'The name to advertise')
     parser.add_argument('--pin', help = 'Pin code to use when Simple Pairing mode is not enabled and/or unsupported by remote client')
     parser.add_argument('--visibility-timeout', default = 0, help = 'Duration (seconds) to remain visible and pairable (default is 0, no timeout)')
+    parser.add_argument('--audio-card-index', default = -1, help = 'ALSA audio card index to use for capture and playback')
     parser.add_argument('--log-level', default = 'DEFAULT', help = 'Logging level: DEFAULT, CRITICAL, ERROR, WARNING, INFO, DEBUG')
 
     args = parser.parse_args()
@@ -76,13 +77,13 @@ class ApplicationMain(ClassLogger):
 
     with phony.bluetooth.adapters.Bluez5(bus, args.interface) as adapter, \
          phony.bluetooth.profiles.handsfree.Ofono(bus) as hfp, \
-         phony.audio.alsa.Alsa(args.audio_device_name) as audio, \
+         phony.audio.alsa.Alsa(int(args.audio_card_index)) as audio, \
          phony.io.raspi.Inputs(self.pin_layout) as inputs, \
          hmi.TelephoneControls(inputs) as controls, \
          behavior.HandsFreeHeadset(bus, adapter, hfp, audio, controls) as headset:
 
       headset.start(args.name, args.pin)
-      headset.enable_pairability(args.visibility_timeout)
+      headset.enable_pairability(int(args.visibility_timeout))
 
       with ScopedLogger(self, 'main_loop'):
         self.main_loop().run()

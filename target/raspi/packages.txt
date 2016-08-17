@@ -1,4 +1,5 @@
 # For phony
+python-dev
 python-gobject
 dbus-python
 python-rpi.gpio

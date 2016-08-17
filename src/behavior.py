@@ -62,6 +62,8 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
     self._hfp.start()
     self._adapter.start(name, pincode)
 
+    self._audio.mute_microphone()
+
     self._started = True
 
   def stop(self):
@@ -239,6 +241,14 @@ class HandsFreeHeadset(ClassLogger, dbus.service.Object):
       self._hfp_audio_gateway.hangup()
     else:
       raise Exception('No audio gateway is connected')
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME)
+  def Mute(self):
+    self._audio.mute_microphone()
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME)
+  def Unmute(self):
+    self._audio.unmute_microphone()
 
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def Reset(self):
