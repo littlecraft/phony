@@ -10,6 +10,8 @@ class HandsFreeHeadset(ClassLogger):
   provide HFP and voice-dialing capabilities.
   """
 
+  MICROPHONE_FEEDBACK_VOLUME = 50
+
   _started = False
   _bus = None
 
@@ -44,6 +46,7 @@ class HandsFreeHeadset(ClassLogger):
       return
 
     self.enable()
+
     self._audio.start()
     self._hfp.start()
     self._adapter.start(name, pincode)
@@ -123,6 +126,7 @@ class HandsFreeHeadset(ClassLogger):
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def unmute_microphone(self):
+    self._audio.set_playback_volume(self.MICROPHONE_FEEDBACK_VOLUME)
     self._audio.unmute_microphone()
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
