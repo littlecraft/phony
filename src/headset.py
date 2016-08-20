@@ -10,7 +10,8 @@ class HandsFreeHeadset(ClassLogger):
   provide HFP and voice-dialing capabilities.
   """
 
-  MICROPHONE_FEEDBACK_VOLUME = 50
+  MICROPHONE_PLAYBACK_VOLUME = 50
+  MICROPHONE_CAPTURE_VOLUME = 100
 
   _started = False
   _bus = None
@@ -51,7 +52,10 @@ class HandsFreeHeadset(ClassLogger):
     self._hfp.start()
     self._adapter.start(name, pincode)
 
-    self.mute_microphone()
+    self._audio.unmute_speaker()
+    self._audio.mute_microphone()
+    self._audio.set_microphone_playback_volume(self.MICROPHONE_PLAYBACK_VOLUME)
+    self._audio.set_microphone_capture_volume(self.MICROPHONE_CAPTURE_VOLUME)
 
     self._started = True
 
@@ -120,14 +124,21 @@ class HandsFreeHeadset(ClassLogger):
     else:
       raise Exception('No audio gateway is connected')
 
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def mute_microphone(self):
     self._audio.mute_microphone()
 
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def unmute_microphone(self):
-    self._audio.set_playback_volume(self.MICROPHONE_FEEDBACK_VOLUME)
     self._audio.unmute_microphone()
+
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
+  def set_microphone_volume(self, volume):
+    self._audio.set_microphone_playback_volume(volume)
+
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
+  def set_speaker_volume(self, volume):
+    self._audio.set_speaker_playback_volume(volume)
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def reset(self):

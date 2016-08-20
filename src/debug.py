@@ -47,6 +47,16 @@ class DbusDebugInterface(ClassLogger, dbus.service.Object):
   def Unmute(self):
     self._headset.unmute_microphone()
 
+  @dbus.service.method(dbus_interface = SERVICE_NAME,
+    input_signature = 'i')
+  def SetMicrophoneVolume(self, volume):
+    self._headset.set_microphone_volume(volume)
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME,
+    input_signature = 'i')
+  def SetSpeakerVolume(self, volume):
+    self._headset.set_speaker_volume(volume)
+
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def Reset(self):
     self._headset.reset()

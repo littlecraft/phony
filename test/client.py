@@ -63,6 +63,18 @@ class PhonyShell(cmd.Cmd):
     except Exception, ex:
       print str(ex)
 
+  def do_mic_volume(self, arg):
+    try:
+      self.phony.SetMicrophoneVolume(int(arg))
+    except Exception, ex:
+      print str(ex)
+
+  def do_speaker_volume(self, arg):
+    try:
+      self.phony.SetSpeakerVolume(int(arg))
+    except Exception, ex:
+      print str(ex)
+
   def do_reset(self, arg):
     try:
       self.phony.Reset()
