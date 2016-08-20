@@ -72,7 +72,8 @@ class PhonyShell(cmd.Cmd):
   def do_status(self, arg):
     try:
       status = self.phony.GetStatus()
-      print status
+      for key,val in status.iteritems():
+        print '%s:\t\t%s' % (key, val)
     except Exception, ex:
       print str(ex)
 

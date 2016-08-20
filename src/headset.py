@@ -80,7 +80,7 @@ class HandsFreeHeadset(ClassLogger):
   def disable_pairability(self):
     self._adapter.disable_pairability()
 
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def answer_call(self):
     self.unmute_microphone()
 
@@ -89,7 +89,7 @@ class HandsFreeHeadset(ClassLogger):
     else:
       raise Exception('No audio gateway is connected')
 
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def initiate_call(self):
     self.unmute_microphone()
 
@@ -98,7 +98,7 @@ class HandsFreeHeadset(ClassLogger):
     else:
       raise Exception('No audio gateway is connected')
 
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def dial(self, number):
     self.unmute_microphone()
 
@@ -107,18 +107,15 @@ class HandsFreeHeadset(ClassLogger):
     else:
       raise Exception('No audio gateway is connected')
 
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def hangup_call(self):
-    try:
-      self.mute_microphone()
+    self.mute_microphone()
 
-      if self._hfp_audio_gateway:
-        self._hfp_audio_gateway.hangup()
-        self._hfp_audio_gateway.end_voice_dial()
-      else:
-        raise Exception('No audio gateway is connected')
-    except Exception, ex:
-      self.log().debug('Error caught while hanging up: %s' % ex)
+    if self._hfp_audio_gateway:
+      self._hfp_audio_gateway.hangup()
+      self._hfp_audio_gateway.end_voice_dial()
+    else:
+      raise Exception('No audio gateway is connected')
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def mute_microphone(self):
@@ -128,7 +125,7 @@ class HandsFreeHeadset(ClassLogger):
   def unmute_microphone(self):
     self._audio.unmute_microphone()
 
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def reset(self):
     try:
       self.mute_microphone()
@@ -144,6 +141,24 @@ class HandsFreeHeadset(ClassLogger):
         self._device = None
     except Exception, ex:
       self.log().warn('Reset error: %s' % ex)
+
+  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  def get_status(self):
+    status = {}
+
+    if self._adapter:
+      status['Adapter'] = str(self._adapter)
+
+    if self._device:
+      status['Device'] = str(self._device)
+
+    if self._hfp_audio_gateway:
+      status['AudioGateway'] = str(self._hfp_audio_gateway)
+
+    if self._audio:
+      status['AudioCard'] = str(self._audio)
+
+    return status
 
   #
   # Bluetooth adapter event callbacks
@@ -182,7 +197,7 @@ class HandsFreeHeadset(ClassLogger):
       audio_gateway.on_call_begin(self._call_began)
       audio_gateway.on_call_end(self._call_ended)
     else:
-      self.log().info('Device %s does not provide voice dialing. Disconnecting...')
+      self.log().error('Device %s does not provide voice dialing. Disconnecting...')
       self.reset()
 
   #

@@ -51,23 +51,12 @@ class DbusDebugInterface(ClassLogger, dbus.service.Object):
   def Reset(self):
     self._headset.reset()
 
+  @dbus.service.method(dbus_interface = SERVICE_NAME, out_signature = 'a{ss}')
+  def GetStatus(self):
+    return self._headset.get_status()
+
   def __enter__(self):
     return self
 
   def __exit__(self, exc_type, exc_value, traceback):
     pass
-
-"""
-  @dbus.service.method(dbus_interface = SERVICE_NAME, out_signature = 's')
-  def GetStatus(self):
-    status = ''
-
-    if self._adapter:
-      status += 'Adapter:\n%s\n\n' % self._adapter
-    if self._device:
-      status += 'Device:\n%s\n\n' % self._device
-    if self._hfp_audio_gateway:
-      status += 'AG:\n%s\n\n' % self._hfp_audio_gateway
-
-    return status
-"""

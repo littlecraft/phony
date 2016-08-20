@@ -53,10 +53,16 @@ class HandCrankTelephoneControls(ClassLogger):
     self._encoder_pulse_count = 0
 
   def _on_off_hook(self, e):
-    self._headset.answer_call()
+    try:
+      self._headset.answer_call()
+    except Exception, ex:
+      self.log().error('Error caught while answering: %s' % ex)
 
   def _on_on_hook(self, e):
-    self._headset.hangup_call()
+    try:
+      self._headset.hangup_call()
+    except Exception, ex:
+      self.log().error('Error caught while hanging up: %s' % ex)
 
   def _on_hand_crank_pulsed(self, e):
     self._encoder_pulse_count += 1
@@ -67,14 +73,20 @@ class HandCrankTelephoneControls(ClassLogger):
       label = None
     )
 
-    if self._encoder_pulse_count % TelephoneControls.ENCODER_PULSES_TO_INTITATE_CALL == 0:
+    if self._encoder_pulse_count % self.ENCODER_PULSES_TO_INTITATE_CALL == 0:
       self._state.initiate_call()
 
   def _on_initiate_call(self, e):
-    self._headset.initiate_call()
+    try:
+      self._headset.initiate_call()
+    except Exception, ex:
+      self.log().error('Error caught while initiating call: %s' % ex)
 
   def _on_hard_reset(self, e):
-    self._headset.reset()
+    try:
+      self._headset.reset()
+    except Exception, ex:
+      self.log().error('Error caught while resetting: %s' % ex)
 
   #
   # Low-level IO callbacks

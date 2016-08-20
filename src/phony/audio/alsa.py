@@ -71,3 +71,9 @@ class Alsa(ClassLogger):
 
   def __exit__(self, exc_type, exc_value, traceback):
     pass
+
+  def __repr__(self):
+    if self._microphone_mixer:
+      return self._microphone_mixer.cardname()
+    else:
+      return 'Unknown'
