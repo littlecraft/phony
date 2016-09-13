@@ -10,11 +10,13 @@ class DbusDebugInterface(ClassLogger, dbus.service.Object):
 
   _bus = None
   _headset = None
+  _ringer = None
 
-  def __init__(self, bus_provider, headset):
+  def __init__(self, bus_provider, headset, ringer):
     ClassLogger.__init__(self)
 
     self._headset = headset
+    self._ringer = ringer
 
     self._bus = bus_provider.session_bus()
 
@@ -64,6 +66,14 @@ class DbusDebugInterface(ClassLogger, dbus.service.Object):
   @dbus.service.method(dbus_interface = SERVICE_NAME, out_signature = 'a{ss}')
   def GetStatus(self):
     return self._headset.get_status()
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME)
+  def StartRinging(self):
+    self._ringer.start_ringing()
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME)
+  def StopRinging(self):
+    self._ringer.stop_ringing()
 
   def __enter__(self):
     return self

@@ -4,6 +4,8 @@ import dbus
 import os
 
 class PhonyShell(cmd.Cmd):
+  LOCK_FILE_NAME = '.phony.lock'
+
   PHONY_OBJECT_PATH = '/org/littlecraft/Phony'
   PHONY_SERVICE_NAME = 'org.littlecraft.Phony'
 
@@ -12,13 +14,17 @@ class PhonyShell(cmd.Cmd):
   bus = None
   phony = None
 
+  _session_bus_path = None
+
   def __init__(self):
     cmd.Cmd.__init__(self)
 
-    session_bus_path = os.environ.get('DBUS_SESSION_BUS_ADDRESS')
+    self.find_lock_file()
 
-    if session_bus_path:
-      self.bus = dbus.SessionBus(session_bus_path)
+    bus_path = self.session_bus_path()
+
+    if bus_path:
+      self.bus = dbus.SessionBus(bus_path)
     else:
       self.bus = dbus.SessionBus()
 
@@ -26,6 +32,21 @@ class PhonyShell(cmd.Cmd):
       self.phony = self.bus.get_object(self.PHONY_SERVICE_NAME, self.PHONY_OBJECT_PATH)
     except Exception, ex:
       raise Exception('Could not get %s: %s' % (self.PHONY_SERVICE_NAME, ex))
+
+  def find_lock_file(self):
+    lock_file = open(self.LOCK_FILE_NAME, 'r')
+
+    if not lock_file:
+      raise Exception('Lock file not found, is phony running?')
+
+    self._session_bus_path = lock_file.read()
+
+  def session_bus_path(self):
+    if self._session_bus_path:
+      os.environ['DBUS_SESSION_BUS_ADDRESS'] = self._session_bus_path
+      return self._session_bus_path
+    else:
+      return os.environ.get('DBUS_SESSION_BUS_ADDRESS')
 
   def do_voice(self, arg):
     try:
@@ -86,6 +107,18 @@ class PhonyShell(cmd.Cmd):
       status = self.phony.GetStatus()
       for key,val in status.iteritems():
         print '%s:\t\t%s' % (key, val)
+    except Exception, ex:
+      print str(ex)
+
+  def do_start_ringing(self, arg):
+    try:
+      self.phony.StartRinging()
+    except Exception, ex:
+      print str(ex)
+
+  def do_stop_ringing(self, arg):
+    try:
+      self.phony.StopRinging()
     except Exception, ex:
       print str(ex)
 

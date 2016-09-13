@@ -7,6 +7,7 @@ import argparse
 
 import hmi
 import debug
+import ringer
 import headset
 
 import phony.base.ipc
@@ -19,24 +20,39 @@ from phony.base import log
 from phony.base.log import ClassLogger, ScopedLogger
 
 class ApplicationMain(ClassLogger):
-  pin_layout = {
+  LOCK_FILE_NAME = '.phony.lock'
+
+  input_layout = {
     'reset_switch': {
       'pin': 20,
-      'direction': 'input',
-      'debounce': 200,
-      'polarity': 'pull-up'
+      'debounce': 50,
+      'pull_up_down': 'up'
     },
     'hook_switch': {
       'pin': 21,
-      'direction': 'input',
       'debounce': 200,
-      'polarity': 'pull-up'
+      'pull_up_down': 'up'
     },
     'hand_crank_encoder': {
       'pin': 26,
-      'direction': 'input',
       'debounce': 50,
-      'polarity': 'pull-up'
+      'pull_up_down': 'down'
+    }
+  }
+
+  output_layout = {
+    'ringer_enable': {
+      'pin': 16,
+      'default': 0,
+      'invert_logic': True
+    },
+    'ringer_1': {
+      'pin': 12,
+      'default': 0
+    },
+    'ringer_2': {
+      'pin': 13,
+      'default': 0
     }
   }
 
@@ -48,10 +64,30 @@ class ApplicationMain(ClassLogger):
 
   def sigint_handler(self, signal, frame):
     self.log().info('SIGINT, exiting...')
+    self.remove_lock_file()
     sys.exit(1)
+
+  def session_bus_path(self):
+    return os.environ.get('DBUS_SESSION_BUS_ADDRESS')
+
+  def aquire_lock_file(self):
+    if os.path.isfile(self.LOCK_FILE_NAME):
+      raise Exception('Lock file exists, already running?')
+
+    lock_file = open(self.LOCK_FILE_NAME, 'w')
+
+    session_bus_path = self.session_bus_path()
+    if session_bus_path:
+      lock_file.write(session_bus_path)
+
+  def remove_lock_file(self):
+    if os.path.isfile(self.LOCK_FILE_NAME):
+      os.remove(self.LOCK_FILE_NAME)
 
   def run(self):
     signal.signal(signal.SIGINT, self.sigint_handler)
+
+    self.aquire_lock_file()
 
     parser = argparse.ArgumentParser(description = 'Bluetooth Handsfree telephony service')
     parser.add_argument('--interface', help = 'The BT interface to listen on')
@@ -72,7 +108,7 @@ class ApplicationMain(ClassLogger):
     # to automatically accept all pairing requests.
     #
 
-    session_bus_path = os.environ.get('DBUS_SESSION_BUS_ADDRESS')
+    session_bus_path = self.session_bus_path()
     if session_bus_path:
       self.log().debug('DBUS_SESSION_BUS_ADDRESS=' + session_bus_path)
 
@@ -81,17 +117,21 @@ class ApplicationMain(ClassLogger):
     with phony.bluetooth.adapters.Bluez5(bus, args.interface) as adapter, \
          phony.bluetooth.profiles.handsfree.Ofono(bus) as hfp, \
          phony.audio.alsa.Alsa(args.audio_card_index) as audio, \
-         headset.HandsFreeHeadset(bus, adapter, hfp, audio) as hands_free_headset:
+         headset.HandsFreeHeadset(bus, adapter, hfp, audio) as hs:
 
-      hands_free_headset.start(args.name, args.pin)
-      hands_free_headset.enable_pairability(args.visibility_timeout)
+      hs.start(args.name, args.pin)
+      hs.enable_pairability(args.visibility_timeout)
 
-      with phony.io.raspi.Inputs(self.pin_layout) as io_inputs, \
-           hmi.HandCrankTelephoneControls(io_inputs, hands_free_headset) as controls, \
-           debug.DbusDebugInterface(bus, hands_free_headset) as debug_interface:
+      with phony.io.raspi.Inputs(self.input_layout) as io_inputs, \
+           phony.io.raspi.Outputs(self.output_layout) as io_outputs, \
+           ringer.Njm2670HbridgeRinger(io_outputs) as bells, \
+           hmi.HandCrankTelephoneControls(io_inputs, bells, hs) as controls, \
+           debug.DbusDebugInterface(bus, hs, bells) as debug_interface:
 
         with ScopedLogger(self, 'main_loop'):
           self.main_loop().run()
+
+    self.remove_lock_file()
 
 if __name__ == '__main__':
   main = ApplicationMain()

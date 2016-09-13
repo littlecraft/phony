@@ -1,18 +1,28 @@
+import sys
 import time
+import signal
+
 from RPi import GPIO
 
 ringer_en = 16
 ringer_1 = 12
 ringer_2 = 13
 
+def sigint_handler(signal, frame):
+  print 'SIGINT, exiting...'
+  GPIO.output(ringer_en, 1)
+  sys.exit(1)
+
 def main():
+  signal.signal(signal.SIGINT, sigint_handler)
+
   GPIO.setmode(GPIO.BCM)
 
   GPIO.setup(ringer_1, GPIO.OUT)
   GPIO.setup(ringer_2, GPIO.OUT)
   GPIO.setup(ringer_en, GPIO.OUT)
 
-  GPIO.output(ringer_en, 1)
+  GPIO.output(ringer_en, 0)
   GPIO.output(ringer_1, 0)
   GPIO.output(ringer_2, 0)
 
@@ -31,8 +41,10 @@ def main():
     v = not v
     c += 1
 
-    #time.sleep(0.05)
-    time.sleep(2)
+    time.sleep(0.05)
+    #time.sleep(2)
+
+  PIO.output(ringer_en, 1)
 
 if __name__ == '__main__':
   main()

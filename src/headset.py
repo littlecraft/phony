@@ -23,6 +23,8 @@ class HandsFreeHeadset(ClassLogger):
   _device = None
   _hfp_audio_gateway = None
 
+  _ringing_state_changed_listeners = []
+
   def __init__(self, bus_provider, adapter, hfp, audio):
     ClassLogger.__init__(self)
 
@@ -80,6 +82,9 @@ class HandsFreeHeadset(ClassLogger):
       self._exec("rfkill block bluetooth")
     except:
       pass
+
+  def on_ringing_state_changed(self, listener):
+    self._ringing_state_changed_listeners.append(listener)
 
   def enable_pairability(self, timeout = 0):
     self._adapter.enable_pairability(timeout)
@@ -221,11 +226,13 @@ class HandsFreeHeadset(ClassLogger):
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _ringing_began(self):
-    pass
+    for listener in self._ringing_state_changed_listeners:
+      listener(True)
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _ringing_ended(self):
-    pass
+    for listener in self._ringing_state_changed_listeners:
+      listener(False)
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _call_began(self):
