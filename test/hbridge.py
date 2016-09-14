@@ -4,7 +4,7 @@ import signal
 
 from RPi import GPIO
 
-ringer_en = 16
+ringer_en = 4
 ringer_1 = 12
 ringer_2 = 13
 

@@ -23,7 +23,9 @@ class HandsFreeHeadset(ClassLogger):
   _device = None
   _hfp_audio_gateway = None
 
-  _ringing_state_changed_listeners = []
+  _on_incoming_call_listeners = []
+  _on_call_began_listeners = []
+  _on_call_ended_listeners = []
 
   def __init__(self, bus_provider, adapter, hfp, audio):
     ClassLogger.__init__(self)
@@ -83,8 +85,14 @@ class HandsFreeHeadset(ClassLogger):
     except:
       pass
 
-  def on_ringing_state_changed(self, listener):
-    self._ringing_state_changed_listeners.append(listener)
+  def on_incoming_call(self, listener):
+    self._on_incoming_call_listeners.append(listener)
+
+  def on_call_began(self, listener):
+    self._on_call_began_listeners.append(listener)
+
+  def on_call_ended(self, listener):
+    self._on_call_ended_listeners.append(listener)
 
   def enable_pairability(self, timeout = 0):
     self._adapter.enable_pairability(timeout)
@@ -212,8 +220,7 @@ class HandsFreeHeadset(ClassLogger):
   def _audio_gateway_attached(self, audio_gateway):
     if audio_gateway.provides_voice_recognition():
       self._hfp_audio_gateway = audio_gateway
-      audio_gateway.on_ringing_begin(self._ringing_began)
-      audio_gateway.on_ringing_end(self._ringing_ended)
+      audio_gateway.on_incoming_call(self._incoming_call)
       audio_gateway.on_call_begin(self._call_began)
       audio_gateway.on_call_end(self._call_ended)
     else:
@@ -225,22 +232,19 @@ class HandsFreeHeadset(ClassLogger):
   #
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def _ringing_began(self):
-    for listener in self._ringing_state_changed_listeners:
-      listener(True)
-
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def _ringing_ended(self):
-    for listener in self._ringing_state_changed_listeners:
-      listener(False)
+  def _incoming_call(self):
+    for listener in self._on_incoming_call_listeners:
+      listener()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _call_began(self):
-    pass
+    for listener in self._on_call_began_listeners:
+      listener()
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
   def _call_ended(self):
-    pass
+    for listener in self._on_call_ended_listeners:
+      listener()
 
   #
   # Private methods

@@ -24,12 +24,12 @@ class ApplicationMain(ClassLogger):
 
   input_layout = {
     'reset_switch': {
-      'pin': 20,
+      'pin': 2,
       'debounce': 50,
       'pull_up_down': 'up'
     },
     'hook_switch': {
-      'pin': 21,
+      'pin': 3,
       'debounce': 200,
       'pull_up_down': 'up'
     },
@@ -42,7 +42,7 @@ class ApplicationMain(ClassLogger):
 
   output_layout = {
     'ringer_enable': {
-      'pin': 16,
+      'pin': 4,
       'default': 0,
       'invert_logic': True
     },
@@ -124,9 +124,9 @@ class ApplicationMain(ClassLogger):
 
       with phony.io.raspi.Inputs(self.input_layout) as io_inputs, \
            phony.io.raspi.Outputs(self.output_layout) as io_outputs, \
-           ringer.Njm2670HbridgeRinger(io_outputs) as bells, \
-           hmi.HandCrankTelephoneControls(io_inputs, bells, hs) as controls, \
-           debug.DbusDebugInterface(bus, hs, bells) as debug_interface:
+           ringer.Njm2670HbridgeRinger(io_outputs) as bell_ringer, \
+           hmi.HandCrankTelephoneControls(io_inputs, bell_ringer, hs) as controls, \
+           debug.DbusDebugInterface(bus, hs, bell_ringer) as debug_interface:
 
         with ScopedLogger(self, 'main_loop'):
           self.main_loop().run()
