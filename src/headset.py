@@ -105,20 +105,20 @@ class HandsFreeHeadset(ClassLogger):
     self._adapter.disable_pairability()
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
-  def answer_call(self):
-    self.unmute_microphone()
-
-    if self._hfp_audio_gateway:
-      self._hfp_audio_gateway.answer()
-    else:
-      raise Exception('No audio gateway is connected')
-
-  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def initiate_call(self):
     self.unmute_microphone()
 
     if self._hfp_audio_gateway:
       self._hfp_audio_gateway.begin_voice_dial()
+    else:
+      raise Exception('No audio gateway is connected')
+
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
+  def cancel_call_initiation(self):
+    self.mute_microphone()
+
+    if self._hfp_audio_gateway:
+      self._hfp_audio_gateway.end_voice_dial()
     else:
       raise Exception('No audio gateway is connected')
 
@@ -132,12 +132,28 @@ class HandsFreeHeadset(ClassLogger):
       raise Exception('No audio gateway is connected')
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
-  def hangup_call(self):
-    self.mute_microphone()
+  def answer_call(self, path = None):
+    self.unmute_microphone()
 
     if self._hfp_audio_gateway:
-      self._hfp_audio_gateway.hangup()
-      self._hfp_audio_gateway.end_voice_dial()
+      self._hfp_audio_gateway.answer(path)
+    else:
+      raise Exception('No audio gateway is connected')
+
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
+  def hangup_call(self, path = None):
+    if self._hfp_audio_gateway:
+      self._hfp_audio_gateway.hangup(path)
+
+      if self._hfp_audio_gateway.call_count() == 0:
+        self.mute_microphone()
+    else:
+      raise Exception('No audio gateway is connected')
+
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
+  def deflect_call_to_voicemail(self, path = None):
+    if self._hfp_audio_gateway:
+      self._hfp_audio_gateway.deflect_to_voicemail(path)
     else:
       raise Exception('No audio gateway is connected')
 
@@ -239,19 +255,19 @@ class HandsFreeHeadset(ClassLogger):
   #
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def _incoming_call(self):
+  def _incoming_call(self, path):
     for listener in self._on_incoming_call_listeners:
-      listener()
+      listener(path)
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def _call_began(self):
+  def _call_began(self, path):
     for listener in self._on_call_began_listeners:
-      listener()
+      listener(path)
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def _call_ended(self):
+  def _call_ended(self, path):
     for listener in self._on_call_ended_listeners:
-      listener()
+      listener(path)
 
   #
   # Private methods

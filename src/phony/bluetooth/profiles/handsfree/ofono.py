@@ -118,7 +118,7 @@ class OfonoHfpAg(ClassLogger):
   _path = None
   _hfp = None
   _voice_call_manager = None
-  _call = None
+  _calls = {}
 
   _on_incoming_call_listeners = []
   _on_call_began_listeners = []
@@ -176,63 +176,106 @@ class OfonoHfpAg(ClassLogger):
   def provides_voice_recognition(self):
     return 'voice-recognition' in self._hfp.GetProperties()['Features']
 
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def answer(self):
-    self._call.Answer()
+  @ClassLogger.TraceAs.event()
+  def answer(self, path = None):
+    if not path:
+      for path,call in self._calls.iteritems():
+        properties = call.GetProperties()
+        if 'State' in properties and properties['State'] == 'incoming':
+          call.Answer()
+    elif path in self._calls:
+      self._calls[path].Answer()
+    else:
+      raise Exception('Call %s not found' % path)
 
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
-  def hangup(self):
-    self._voice_call_manager.HangupAll()
+  @ClassLogger.TraceAs.event()
+  def hangup(self, path = None):
+    if not path:
+      self._voice_call_manager.HangupAll()
+      self._calls = {}
+    elif path in self._calls:
+      self._calls[path].Hangup()
+      del self._calls[path]
+    else:
+      raise Exception('Call %s not found' % path)
 
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  @ClassLogger.TraceAs.event()
+  def deflect_to_voicemail(self, path = None):
+    if not path:
+      for path,call in self._calls.iteritems():
+        properties = call.GetProperties()
+        if 'State' in properties:
+          state = properties['State']
+          if state == 'incoming' or state == 'waiting':
+            call.Hangup()
+    elif path in self._calls:
+      self._calls[path].Hangup()
+    else:
+      raise Exception('Call %s not found' % path)
+
+  @ClassLogger.TraceAs.event()
   def begin_voice_dial(self):
     if not self.provides_voice_recognition():
       raise Exception('Device does not support voice recognition')
 
     self._hfp.SetProperty('VoiceRecognition', True)
 
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  @ClassLogger.TraceAs.event()
   def end_voice_dial(self):
     if not self.provides_voice_recognition():
       raise Exception('Device does not support voice recognition')
 
     self._hfp.SetProperty('VoiceRecognition', False)
 
-  @ClassLogger.TraceAs.event(log_level = Levels.INFO)
+  @ClassLogger.TraceAs.event()
   def dial(self, number):
     self._voice_call_manager.Dial(number, 'default')
 
+  def call_count(self):
+    return len(self._calls)
+
   @ClassLogger.TraceAs.call()
   def _call_added(self, path, properties):
-    self._call = dbus.Interface(
+    call = dbus.Interface(
       self._bus.get_object(Ofono.SERVICE_NAME, path),
       Ofono.VOICE_CALL_INTERFACE
     )
 
-    if properties['State'] == 'incoming':
-      for listener in self._on_incoming_call_listeners:
-        listener()
-    elif properties['State'] == 'active':
-      for listener in self._on_call_began_listeners:
-        listener()
+    self._calls[call.object_path] = call
+
+    properties = call.GetProperties()
+
+    state = properties['State']
+    number = properties['LineIdentification']
+
+    self.log().info('%s: %s' % (state, number))
+
+    listeners = []
+    if state == 'incoming' or state == 'waiting':
+      listeners = self._on_incoming_call_listeners
+    elif state == 'active' or state == 'dialing':
+      listeners = self._on_call_began_listeners
+
+    for listener in listeners:
+      listener(path)
 
   @ClassLogger.TraceAs.call()
   def _call_removed(self, path):
-    if self._call and self._call.object_path == path:
-      self._call = None
+    if path in self._calls:
+      del self._calls[path]
 
       for listener in self._on_call_ended_listeners:
-        listener()
+        listener(path)
 
   @ClassLogger.TraceAs.call()
   def _call_properties_changed(self, property, value, path = None):
-    if self._call and self._call.object_path == path:
+    if path in self._calls:
       if property == 'State' and value == 'incoming':
         for listener in self._on_incoming_call_listeners:
-          listener()
+          listener(path)
       elif property == 'State' and value == 'active':
         for listener in self._on_call_began_listeners:
-          listener()
+          listener(path)
 
   def _show_properties(self):
     properties = self._hfp.GetProperties()

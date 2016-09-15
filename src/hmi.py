@@ -13,48 +13,50 @@ class HandCrankTelephoneControls(ClassLogger):
   def __init__(self, io_inputs, bell_ringer, headset):
     ClassLogger.__init__(self)
 
-    #
-    # TODO:
-    #   1) Incoming call while off hook
-    #   2) Incoming call while in call
-    #
-
     self._state = Fysom({
       'initial': 'idle',
       'events': [
         #
         # Ingress calling state transitions
         #
-        {'name': 'incoming_call', 'src': 'idle',          'dst': 'ringing'},
-        {'name': 'incoming_call', 'src': '*',             'dst': '='},
-        {'name': 'call_ended',    'src': 'ringing',       'dst': 'idle'},
-        {'name': 'off_hook',      'src': 'ringing',       'dst': 'off_the_hook'},
-
-        #
-        # In-call state transitions
-        #
-        {'name': 'on_hook',       'src': '*',             'dst': 'idle'},
-
-        #
-        # A call can end at any time, and that's fine
-        #
-        {'name': 'call_ended',    'src': '*',             'dst': '='},
+        {'name': 'incoming_call', 'src': 'idle',            'dst': 'ringing'},
+        {'name': 'call_ended',    'src': 'ringing',         'dst': 'idle'},
+        {'name': 'off_hook',      'src': 'ringing',         'dst': 'in_call'},
+        {'name': 'call_began',    'src': '*',               'dst': '='},
 
         #
         # Egress calling state transitions
         #
-        {'name': 'off_hook',      'src': 'idle',          'dst': 'off_the_hook'},
+        {'name': 'off_hook',      'src': 'idle',            'dst': 'initiating_call'},
+        {'name': 'call_began',    'src': 'initiating_call', 'dst': 'in_call'},
 
         #
-        # Ignore off-hook bounce
+        # In-call state transitions
         #
-        {'name': 'off_hook',      'src': '*',             'dst': '='}
+        {'name': 'on_hook',       'src': '*',               'dst': 'idle'},
+
+        #
+        # Ignore these transitions:
+        #
+
+        # We don't care about call's ending in any other state except while ringing
+        {'name': 'call_ended',    'src': '*',               'dst': '='},
+        # Incoming calls in any state other than idle, do not cause a transition
+        {'name': 'incoming_call', 'src': '*',               'dst': '='},
+        # Ignore off-hook switch bouncing
+        {'name': 'off_hook',      'src': '*',               'dst': '='}
       ],
       'callbacks': {
         'onchangestate': self._on_change_state,
+
+        # State transition callbacks
         'onidle': self._on_idle,
         'onringing': self._on_ringing,
-        'onoff_the_hook': self._on_off_the_hook
+        'onin_call': self._on_in_call,
+        'oninitiating_call': self._on_initiating_call,
+
+        # Event callbacks
+        'onincoming_call': self._on_incoming_call
       }
     })
 
@@ -88,8 +90,10 @@ class HandCrankTelephoneControls(ClassLogger):
     try:
       if e.src == 'ringing':
         self._ringer.stop_ringing()
-      elif e.src == 'off_the_hook':
+      elif e.src == 'in_call':
         self._headset.hangup_call()
+      elif e.src == 'initiating_call':
+        self._headset.cancel_call_initiation()
     except Exception, ex:
       self.log().error('Error caught while going idle: %s' % ex)
 
@@ -99,30 +103,42 @@ class HandCrankTelephoneControls(ClassLogger):
     except Exception, ex:
       self.log().error('Error caught while going ringing: %s' % ex)
 
-  def _on_off_the_hook(self, e):
+  def _on_in_call(self, e):
     try:
       if e.src == 'ringing':
         self._ringer.stop_ringing()
         self._headset.answer_call()
-      elif e.src == 'idle':
+    except Exception, ex:
+      self.log().error('Error caught while going in_call: %s' % ex)
+
+  def _on_initiating_call(self, e):
+    try:
+      if e.src == 'idle':
         self._headset.initiate_call()
     except Exception, ex:
-      self.log().error('Error caught while going off_the_hook: %s' % ex)
+      self.log().error('Error caught while going initiating_call: %s' % ex)
+
+  def _on_incoming_call(self, e):
+    try:
+      if e.src != 'idle':
+        self._headset.deflect_call_to_voicemail()
+    except Exception, ex:
+      self.log().error('Error caught for event call_began: %s' % ex)
 
   #
   # headset callbacks
   #
 
   @ClassLogger.TraceAs.event()
-  def _incoming_call(self):
+  def _incoming_call(self, path):
     self._state.incoming_call()
 
   @ClassLogger.TraceAs.event()
-  def _call_began(self):
-    pass
+  def _call_began(self, path):
+    self._state.call_began()
 
   @ClassLogger.TraceAs.event()
-  def _call_ended(self):
+  def _call_ended(self, path):
     self._state.call_ended()
 
   @ClassLogger.TraceAs.event()
