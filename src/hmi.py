@@ -13,31 +13,43 @@ class HandCrankTelephoneControls(ClassLogger):
   def __init__(self, io_inputs, bell_ringer, headset):
     ClassLogger.__init__(self)
 
+    #
+    # TODO:
+    #   1) Incoming call while off hook
+    #   2) Incoming call while in call
+    #
+
     self._state = Fysom({
       'initial': 'idle',
       'events': [
-        {'name': 'incoming_call',     'src': 'idle',           'dst': 'call_incoming'},
+        #
+        # Ingress calling state transitions
+        #
+        {'name': 'incoming_call', 'src': 'idle',          'dst': 'ringing'},
+        {'name': 'incoming_call', 'src': '*',             'dst': '='},
+        {'name': 'call_ended',    'src': 'ringing',       'dst': 'idle'},
+        {'name': 'off_hook',      'src': 'ringing',       'dst': 'off_the_hook'},
 
-        {'name': 'call_began',        'src': '*',              'dst': 'in_call'},
-        {'name': 'call_ended',        'src': '*',              'dst': 'idle'},
+        #
+        # In-call state transitions
+        #
+        {'name': 'on_hook',       'src': '*',             'dst': 'idle'},
 
-        {'name': 'off_hook',          'src': 'call_incoming',  'dst': '='},
-        {'name': 'off_hook',          'src': 'idle',           'dst': 'initiate_call'},
+        #
+        # A call can end at any time, and that's fine
+        #
+        {'name': 'call_ended',    'src': '*',             'dst': '='},
 
-        {'name': 'on_hook',           'src': '*',              'dst': 'idle'}
+        #
+        # Egress calling state transitions
+        #
+        {'name': 'off_hook',      'src': 'idle',          'dst': 'off_the_hook'}
       ],
       'callbacks': {
         'onchangestate': self._on_change_state,
-
-        'oncall_incoming': self._on_call_incoming,
-        'oncall_ended': self._on_call_ended,
-        'oncall_began': self._on_call_began,
-
-        'onoff_hook': self._on_off_hook,
-
-        'oninitiate_call': self._on_initiate_call,
-
-        'onon_hook': self._on_on_hook
+        'onidle': self._on_idle,
+        'onringing': self._on_ringing,
+        'onoff_the_hook': self._on_off_the_hook
       }
     })
 
@@ -47,6 +59,7 @@ class HandCrankTelephoneControls(ClassLogger):
     self._headset.on_incoming_call(self._incoming_call)
     self._headset.on_call_began(self._call_began)
     self._headset.on_call_ended(self._call_ended)
+    self._headset.on_device_connected(self._device_connected)
 
     self._inputs = io_inputs
     self._inputs.on_rising_edge('hook_switch', self._swich_hook_high)
@@ -56,54 +69,40 @@ class HandCrankTelephoneControls(ClassLogger):
 
   @ClassLogger.TraceAs.call()
   def _reset(self):
-    self._headset.reset()
     self._ringer.stop_ringing()
+    self._headset.reset()
 
   #
   # State change callbacks
   #
 
   def _on_change_state(self, e):
-    self.log().debug('State transition "%s": %s -> %s' % (e.event, e.src, e.dst))
+    self.log().debug('** State: %s -> <%s> -> %s' % (e.src, e.event, e.dst))
 
-  def _on_call_incoming(self, e):
+  def _on_idle(self, e):
+    try:
+      if e.src == 'ringing':
+        self._ringer.stop_ringing()
+      elif e.src == 'off_the_hook':
+        self._headset.hangup_call()
+    except Exception, ex:
+      self.log().error('Error caught while going idle: %s' % ex)
+
+  def _on_ringing(self, e):
     try:
       self._ringer.start_ringing()
     except Exception, ex:
-      self.log().error('Error caught for incoming call: %s' % ex)
+      self.log().error('Error caught while going ringing: %s' % ex)
 
-  def _on_call_ended(self, e):
+  def _on_off_the_hook(self, e):
     try:
-      if e.src == 'call_incoming':
+      if e.src == 'ringing':
         self._ringer.stop_ringing()
-    except Exception, ex:
-      self.log().error('Error caught for call ended: %s' % ex)
-
-  def _on_call_began(self, e):
-    try:
-      if e.src == 'call_incoming':
-        self._ringer.stop_ringing()
-    except Exception, ex:
-      self.log().error('Error caught for call began: %s' % ex)
-
-  def _on_off_hook(self, e):
-    try:
-      if e.src == 'call_incoming':
         self._headset.answer_call()
+      elif e.src == 'idle':
+        self._headset.initiate_call()
     except Exception, ex:
-      self.log().error('Error caught for off hook: %s' % ex)
-
-  def _on_initiate_call(self, e):
-    try:
-      self._headset.initiate_call()
-    except Exception, ex:
-      self.log().error('Error caught for initiate call: %s' % ex)
-
-  def _on_on_hook(self, e):
-    try:
-      self._headset.hangup_call()
-    except Exception, ex:
-      self.log().error('Error caught for on hook: %s' % ex)
+      self.log().error('Error caught while going off_the_hook: %s' % ex)
 
   #
   # headset callbacks
@@ -115,11 +114,15 @@ class HandCrankTelephoneControls(ClassLogger):
 
   @ClassLogger.TraceAs.event()
   def _call_began(self):
-    self._state.call_began()
+    pass
 
   @ClassLogger.TraceAs.event()
   def _call_ended(self):
     self._state.call_ended()
+
+  @ClassLogger.TraceAs.event()
+  def _device_connected(self):
+    self._ringer.short_ring()
 
   #
   # Low-level IO callbacks
@@ -142,7 +145,7 @@ class HandCrankTelephoneControls(ClassLogger):
 
   @ClassLogger.TraceAs.event()
   def _rest_switch_pressed(self):
-    pass
+    self._reset()
 
   def __enter__(self):
     return self

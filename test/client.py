@@ -122,6 +122,12 @@ class PhonyShell(cmd.Cmd):
     except Exception, ex:
       print str(ex)
 
+  def do_short_ring(self, arg):
+    try:
+      self.phony.ShortRing()
+    except Exception, ex:
+      print str(ex)
+
   def do_exit(self, arg):
     sys.exit()
 

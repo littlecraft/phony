@@ -87,8 +87,6 @@ class ApplicationMain(ClassLogger):
   def run(self):
     signal.signal(signal.SIGINT, self.sigint_handler)
 
-    self.aquire_lock_file()
-
     parser = argparse.ArgumentParser(description = 'Bluetooth Handsfree telephony service')
     parser.add_argument('--interface', help = 'The BT interface to listen on')
     parser.add_argument('--name', help = 'The name to advertise')
@@ -98,6 +96,8 @@ class ApplicationMain(ClassLogger):
     parser.add_argument('--log-level', default = 'DEFAULT', help = 'Logging level: DEFAULT, CRITICAL, ERROR, WARNING, INFO, DEBUG')
 
     args = parser.parse_args()
+
+    self.aquire_lock_file()
 
     level = log.Levels.parse(args.log_level)
     log.send_to_stdout(level = level)

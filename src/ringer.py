@@ -13,6 +13,9 @@ class Njm2670HbridgeRinger(ClassLogger):
 
   _stop = None
   _thread = None
+  _on_period = 0
+  _off_period = 0
+  _ring_duration = -1
 
   def __init__(self, io_outputs):
     ClassLogger.__init__(self)
@@ -26,35 +29,49 @@ class Njm2670HbridgeRinger(ClassLogger):
     self._outputs.ringer_2(0)
 
   @ClassLogger.TraceAs.event()
-  def start_ringing(self):
-    if self._thread:
-      raise Exception('Ringing already started')
+  def short_ring(self):
+    if not self.is_ringing():
+      self._on_period = 0.20
+      self._off_period = 0
+      self._ring_duration = 0.20
 
-    self._thread = threading.Thread(target = self.run)
-    self._thread.start()
+      self._thread = threading.Thread(target = self.run)
+      self._thread.start()
+
+  @ClassLogger.TraceAs.event()
+  def start_ringing(self):
+    if not self.is_ringing():
+      self._on_period = self.RING_DURATION_SEC
+      self._off_period = self.PAUSE_DURATION_SEC
+      self._ring_duration = -1
+
+      self._thread = threading.Thread(target = self.run)
+      self._thread.start()
 
   @ClassLogger.TraceAs.call()
   def stop_ringing(self):
-    if self._thread:
+    if self.is_ringing():
       self._stop.set()
       self._thread.join()
       self._stop.clear()
 
-      self._thread = None
+  def is_ringing(self):
+    return self._thread != None and self._thread.is_alive()
 
   def run(self):
     ring_period_sec = 1.0 / self.RING_FREQUENCY_HZ
 
     self._ringer_enable(1)
 
-    while self._is_running():
+    time_to_stop = time.time() + self._ring_duration
+    while self._is_running() and (self._ring_duration < 0 or time.time() < time_to_stop):
 
-      time_to_stop = time.time() + self.RING_DURATION_SEC
-      while self._is_running() and time.time() < time_to_stop:
+      on_period = time.time() + self._on_period
+      while self._is_running() and time.time() < on_period:
         self._ding()
         time.sleep(ring_period_sec)
 
-      self._sleep_or_exit(self.PAUSE_DURATION_SEC)
+      self._sleep_or_exit(self._off_period)
 
     self._ringer_enable(0)
 
@@ -67,8 +84,8 @@ class Njm2670HbridgeRinger(ClassLogger):
     self._outputs.ringer_2(self._polarity)
 
   def _sleep_or_exit(self, seconds):
-    time_to_stop = time.time() + seconds
-    while self._is_running() and time.time() < time_to_stop:
+    sleep_period = time.time() + seconds
+    while self._is_running() and time.time() < sleep_period:
       time.sleep(0.001)
 
   def _is_running(self):

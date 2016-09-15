@@ -26,7 +26,7 @@ class DbusDebugInterface(ClassLogger, dbus.service.Object):
 
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def BeginVoiceDial(self):
-    self._headset.begin_voice_dial()
+    self._headset.answer_call()
 
   @dbus.service.method(dbus_interface = SERVICE_NAME,
     input_signature = 's')
@@ -74,6 +74,10 @@ class DbusDebugInterface(ClassLogger, dbus.service.Object):
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def StopRinging(self):
     self._ringer.stop_ringing()
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME)
+  def ShortRing(self):
+    self._ringer.short_ring()
 
   def __enter__(self):
     return self

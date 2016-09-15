@@ -26,6 +26,7 @@ class HandsFreeHeadset(ClassLogger):
   _on_incoming_call_listeners = []
   _on_call_began_listeners = []
   _on_call_ended_listeners = []
+  _on_device_connected_listeners = []
 
   def __init__(self, bus_provider, adapter, hfp, audio):
     ClassLogger.__init__(self)
@@ -93,6 +94,9 @@ class HandsFreeHeadset(ClassLogger):
 
   def on_call_ended(self, listener):
     self._on_call_ended_listeners.append(listener)
+
+  def on_device_connected(self, listener):
+    self._on_device_connected_listeners.append(listener)
 
   def enable_pairability(self, timeout = 0):
     self._adapter.enable_pairability(timeout)
@@ -223,6 +227,9 @@ class HandsFreeHeadset(ClassLogger):
       audio_gateway.on_incoming_call(self._incoming_call)
       audio_gateway.on_call_begin(self._call_began)
       audio_gateway.on_call_end(self._call_ended)
+
+      for listener in self._on_device_connected_listeners:
+        listener()
     else:
       self.log().error('Device %s does not provide voice dialing. Disconnecting...')
       self.reset()

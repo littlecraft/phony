@@ -177,7 +177,7 @@ class NamedLogger(object):
     else:
       label = self._label_maker.call(self, method, args, width)
 
-    self._log.log(level, '** %s **' % label)
+    self._log.log(level, '** %s' % label)
 
   def _log_method_call(self, method = None, args = None, width = MAXIMUM_TRACE_WIDTH, level = Levels.DEFAULT):
     if level == Levels.DEFAULT:
