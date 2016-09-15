@@ -43,7 +43,12 @@ class HandCrankTelephoneControls(ClassLogger):
         #
         # Egress calling state transitions
         #
-        {'name': 'off_hook',      'src': 'idle',          'dst': 'off_the_hook'}
+        {'name': 'off_hook',      'src': 'idle',          'dst': 'off_the_hook'},
+
+        #
+        # Ignore off-hook bounce
+        #
+        {'name': 'off_hook',      'src': '*',             'dst': '='}
       ],
       'callbacks': {
         'onchangestate': self._on_change_state,

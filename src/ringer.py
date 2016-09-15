@@ -1,12 +1,26 @@
-import threading
 import time
+import threading
 
 from phony.base.log import ClassLogger
 
-class Njm2670HbridgeRinger(ClassLogger):
+class BellRinger(ClassLogger):
+  """
+  The bell ringer solenoids are driven by an NJM2670 H-Bridge.
+  Pins ringer_1 and ringer_2 are connected to INA1 and INA2 of
+  the H-Bridge, and are toggled alternatingly to create a 20Hz
+  AC signal across OUTA1 and OUTA2 that drives each solenoid.
+
+  The ringer_enable pin toggles power to a MC34063 30v boost
+  converter which supplies the source voltage to the H-Bridge.
+
+  Reference:
+  https://www.sparkfun.com/datasheets/Port-O-Rotary/Blue_Rotary-v07_Schematic.pdf
+  """
+
+  # North American 2-4 ring cadence @ 20Hz
   RING_FREQUENCY_HZ = 20
   RING_DURATION_SEC = 2.0
-  PAUSE_DURATION_SEC = 2.0
+  PAUSE_DURATION_SEC = 4.0
 
   _outputs = None
   _polarity = 0
@@ -23,6 +37,7 @@ class Njm2670HbridgeRinger(ClassLogger):
     self._stop = threading.Event()
 
     self._outputs = io_outputs
+
     # De-energize hbridge
     self._outputs.ringer_enable(0)
     self._outputs.ringer_1(0)
@@ -48,7 +63,7 @@ class Njm2670HbridgeRinger(ClassLogger):
       self._thread = threading.Thread(target = self.run)
       self._thread.start()
 
-  @ClassLogger.TraceAs.call()
+  @ClassLogger.TraceAs.event()
   def stop_ringing(self):
     if self.is_ringing():
       self._stop.set()

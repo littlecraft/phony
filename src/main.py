@@ -24,12 +24,12 @@ class ApplicationMain(ClassLogger):
 
   input_layout = {
     'reset_switch': {
-      'pin': 2,
-      'debounce': 50,
+      'pin': 27,
+      'debounce': 200,
       'pull_up_down': 'up'
     },
     'hook_switch': {
-      'pin': 3,
+      'pin': 17,
       'debounce': 200,
       'pull_up_down': 'up'
     },
@@ -42,7 +42,7 @@ class ApplicationMain(ClassLogger):
 
   output_layout = {
     'ringer_enable': {
-      'pin': 4,
+      'pin': 22,
       'default': 0,
       'invert_logic': True
     },
@@ -64,7 +64,7 @@ class ApplicationMain(ClassLogger):
 
   def sigint_handler(self, signal, frame):
     self.log().info('SIGINT, exiting...')
-    self.remove_lock_file()
+    self.release_lock_file()
     sys.exit(1)
 
   def session_bus_path(self):
@@ -80,7 +80,7 @@ class ApplicationMain(ClassLogger):
     if session_bus_path:
       lock_file.write(session_bus_path)
 
-  def remove_lock_file(self):
+  def release_lock_file(self):
     if os.path.isfile(self.LOCK_FILE_NAME):
       os.remove(self.LOCK_FILE_NAME)
 
@@ -109,9 +109,6 @@ class ApplicationMain(ClassLogger):
     #
 
     session_bus_path = self.session_bus_path()
-    if session_bus_path:
-      self.log().debug('DBUS_SESSION_BUS_ADDRESS=' + session_bus_path)
-
     bus = phony.base.ipc.BusProvider(session_bus_path)
 
     with phony.bluetooth.adapters.Bluez5(bus, args.interface) as adapter, \
@@ -124,14 +121,14 @@ class ApplicationMain(ClassLogger):
 
       with phony.io.raspi.Inputs(self.input_layout) as io_inputs, \
            phony.io.raspi.Outputs(self.output_layout) as io_outputs, \
-           ringer.Njm2670HbridgeRinger(io_outputs) as bell_ringer, \
-           hmi.HandCrankTelephoneControls(io_inputs, bell_ringer, hs) as controls, \
-           debug.DbusDebugInterface(bus, hs, bell_ringer) as debug_interface:
+           ringer.BellRinger(io_outputs) as bells, \
+           hmi.HandCrankTelephoneControls(io_inputs, bells, hs), \
+           debug.DbusDebugInterface(bus, hs, bells):
 
         with ScopedLogger(self, 'main_loop'):
           self.main_loop().run()
 
-    self.remove_lock_file()
+    self.release_lock_file()
 
 if __name__ == '__main__':
   main = ApplicationMain()
