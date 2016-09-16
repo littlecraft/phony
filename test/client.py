@@ -4,7 +4,7 @@ import dbus
 import os
 
 class PhonyShell(cmd.Cmd):
-  LOCK_FILE_NAME = '.phony.lock'
+  SOCKET_FILE = '/run/phony/phony.socket'
 
   PHONY_OBJECT_PATH = '/org/littlecraft/Phony'
   PHONY_SERVICE_NAME = 'org.littlecraft.Phony'
@@ -19,7 +19,7 @@ class PhonyShell(cmd.Cmd):
   def __init__(self):
     cmd.Cmd.__init__(self)
 
-    self.find_lock_file()
+    self.find_socket_file()
 
     bus_path = self.session_bus_path()
 
@@ -33,13 +33,9 @@ class PhonyShell(cmd.Cmd):
     except Exception, ex:
       raise Exception('Could not get %s: %s' % (self.PHONY_SERVICE_NAME, ex))
 
-  def find_lock_file(self):
-    lock_file = open(self.LOCK_FILE_NAME, 'r')
-
-    if not lock_file:
-      raise Exception('Lock file not found, is phony running?')
-
-    self._session_bus_path = lock_file.read()
+  def find_socket_file(self):
+    socket_file = open(self.SOCKET_FILE, 'r')
+    self._session_bus_path = socket_file.read()
 
   def session_bus_path(self):
     if self._session_bus_path:

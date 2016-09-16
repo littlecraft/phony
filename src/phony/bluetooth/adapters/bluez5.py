@@ -341,6 +341,7 @@ class Bluez5Utils:
   def find_adapter_in_objects(objects, pattern, bus):
     if pattern:
       pattern = pattern.upper()
+
     for path, ifaces in objects.iteritems():
       adapter = ifaces.get(Bluez5Utils.ADAPTER_INTERFACE)
 
@@ -348,7 +349,7 @@ class Bluez5Utils:
         continue
 
       address = adapter['Address'].upper()
-      if not pattern or pattern == address or path.endswith(pattern):
+      if not pattern or pattern == address or path.upper().endswith(pattern):
         return Bluez5Utils.adapter(path, bus)
 
     raise Exception('Bluetooth adapter not found: "' + \

@@ -1,0 +1,12 @@
+[Unit]
+Description=PulseAudio Daemon
+After=bluetooth.service ofono.service
+Wants=bluetooth.service ofono.service
+
+[Service]
+Type=simple
+PrivateTmp=true
+ExecStart=/usr/local/bin/pulseaudio --system --realtime --disallow-exit --no-cpu-limit
+
+[Install]
+WantedBy=multi-user.target
