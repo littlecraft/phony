@@ -41,8 +41,8 @@ class DictionaryConfig(ConfigParser.ConfigParser):
     return d
 
 class ApplicationMain(ClassLogger):
-  CONFIG_FILE = '/etc/phony/phony.conf'
-  SOCKET_FILE = '/run/phony/phony.socket'
+  CONFIG_FILE = '/etc/crankphone/crankphone.conf'
+  SOCKET_FILE = '/run/crankphone/crankphone.socket'
 
   input_layout = {
     'reset_switch': {

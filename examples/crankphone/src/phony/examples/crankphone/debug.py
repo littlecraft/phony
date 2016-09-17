@@ -5,8 +5,8 @@ from phony.base.log import ClassLogger
 
 class DbusDebugInterface(ClassLogger, dbus.service.Object):
 
-  OBJECT_PATH = '/org/littlecraft/Phony'
-  SERVICE_NAME = 'org.littlecraft.Phony'
+  OBJECT_PATH = '/org/littlecraft/Phony/Examples/CrankPhone'
+  SERVICE_NAME = 'org.littlecraft.Phony.Examples.CrankPhone'
 
   _bus = None
   _headset = None

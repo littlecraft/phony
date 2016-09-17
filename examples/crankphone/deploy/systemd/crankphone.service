@@ -1,12 +1,12 @@
 [Unit]
-Description=Phony Bluetooth Headset Service
+Description=Ol' time hand crank telephone bluetooth hands-free headset from yesteryear
 After=bluetooth.service ofono.service pulseaudio.service
 Wants=bluetooth.service ofono.service pulseaudio.service
 
 [Service]
 Type=simple
-ExecStart=/usr/local/lib/phony/scripts/phony
-RuntimeDirectory=phony
+ExecStart=/usr/local/bin/crankphone
+RuntimeDirectory=crankphone
 Group=bluetooth
 Restart=always
 RestartSec=10

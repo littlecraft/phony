@@ -1,13 +1,15 @@
+#!/usr/bin/python
+
 import cmd
 import sys
 import dbus
 import os
 
 class PhonyShell(cmd.Cmd):
-  SOCKET_FILE = '/run/phony/phony.socket'
+  SOCKET_FILE = '/run/crankphone/crankphone.socket'
 
-  PHONY_OBJECT_PATH = '/org/littlecraft/Phony'
-  PHONY_SERVICE_NAME = 'org.littlecraft.Phony'
+  PHONY_OBJECT_PATH = '/org/littlecraft/Phony/Examples/CrankPhone'
+  PHONY_SERVICE_NAME = 'org.littlecraft.Phony.Examples.CrankPhone'
 
   intro = 'Welcome to phony shell.  Type help or ? for list of commands.\n'
   prompt = '(phony) '

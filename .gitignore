@@ -2,4 +2,4 @@
 *.pyc
 __pycache__
 .cache
-.phony.lock
+build
