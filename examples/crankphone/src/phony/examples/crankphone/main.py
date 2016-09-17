@@ -11,8 +11,8 @@ import ConfigParser
 import hmi
 import debug
 import ringer
-import headset
 
+import phony.headset
 import phony.base.ipc
 import phony.io.raspi
 import phony.audio.alsa
@@ -171,7 +171,7 @@ class ApplicationMain(ClassLogger):
     with phony.bluetooth.adapters.Bluez5(bus, config.interface) as adapter, \
          phony.bluetooth.profiles.handsfree.Ofono(bus) as hfp, \
          phony.audio.alsa.Alsa(config.audio_card_index) as audio, \
-         headset.HandsFreeHeadset(bus, adapter, hfp, audio) as hs:
+         phony.headset.HandsFreeHeadset(bus, adapter, hfp, audio) as hs:
 
       hs.start(config.name, config.pin)
       hs.enable_pairability(config.visibility_timeout)

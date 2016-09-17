@@ -1,14 +1,9 @@
 # For phony
 python-dev
+python-setuptools
 python-gobject
 dbus-python
-python-rpi.gpio
 rfkill
-pip
-
-# Pip
-fysom
-pyalsaaudio
 
 # For ofono
 glib2.0

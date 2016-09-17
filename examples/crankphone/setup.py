@@ -1,21 +1,24 @@
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
-  name = 'Crankphone',
+  name = 'crankphone',
   version = '1.0',
   description = 'Using a Raspberry Pi, turn an old hand-crank telephone into a bluetooth hands-free headset',
   author = 'Matthew Waddell',
   author_email = 'matt@littlecraft.io',
 
-  packages = [
-    'phony',
-    'phony.examples',
-    'phony.examples.crankphone'
-  ],
+  namespace_packages = ['phony'],
   package_dir = {'': 'src'},
+  packages = find_packages('src'),
+
+  install_requires = [
+    'fysom',
+    'RPI.GPIO'
+  ],
 
   scripts = ['crankphone', 'crankphone-client'],
+
   data_files = [
     ('/etc/crankphone',
       [
