@@ -6,7 +6,4 @@ Wants=bluetooth.service ofono.service
 [Service]
 Type=simple
 PrivateTmp=true
-ExecStart=/usr/local/bin/pulseaudio --system --realtime --disallow-exit --no-cpu-limit
-
-[Install]
-WantedBy=multi-user.target
+ExecStart=/usr/local/bin/pulseaudio --system -vvvv
