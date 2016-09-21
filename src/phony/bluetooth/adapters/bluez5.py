@@ -69,7 +69,7 @@ class Bluez5(ClassLogger):
 
     self._show_properties()
 
-    self.log().info('Registering agent: ' + self.AGENT_PATH)
+    self.log().debug('Registering agent: ' + self.AGENT_PATH)
     self._agent = PermissibleAgent(self._bus, self.AGENT_PATH)
     self._agent.set_pincode(pincode)
 

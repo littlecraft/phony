@@ -10,9 +10,6 @@ class HandsFreeHeadset(ClassLogger):
   provide HFP and voice-dialing capabilities.
   """
 
-  MICROPHONE_PLAYBACK_VOLUME = 50
-  MICROPHONE_CAPTURE_VOLUME = 100
-
   _started = False
   _bus = None
 
@@ -46,7 +43,7 @@ class HandsFreeHeadset(ClassLogger):
   def __exit__(self, exc_type, exc_value, traceback):
     self.stop()
 
-  @ClassLogger.TraceAs.call(with_arguments = False)
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO, with_arguments = False)
   def start(self, name, pincode):
     if self._started:
       return
@@ -59,11 +56,10 @@ class HandsFreeHeadset(ClassLogger):
 
     self._audio.unmute_speaker()
     self._audio.mute_microphone()
-    self._audio.set_microphone_playback_volume(self.MICROPHONE_PLAYBACK_VOLUME)
-    self._audio.set_microphone_capture_volume(self.MICROPHONE_CAPTURE_VOLUME)
 
     self._started = True
 
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def stop(self):
     if self._started:
       self._adapter.stop()
@@ -72,15 +68,15 @@ class HandsFreeHeadset(ClassLogger):
 
       self._started = False
 
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def enable(self):
-    self.log().info("Enabling radio")
     try:
       self._exec("rfkill unblock bluetooth")
     except Exception, ex:
       self.log().debug('Unable to unblock bluetooth with rfkill: %s' % ex)
 
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def disable(self):
-    self.log().info("Disabling radio")
     try:
       self._exec("rfkill block bluetooth")
     except:
@@ -98,9 +94,11 @@ class HandsFreeHeadset(ClassLogger):
   def on_device_connected(self, listener):
     self._on_device_connected_listeners.append(listener)
 
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def enable_pairability(self, timeout = 0):
     self._adapter.enable_pairability(timeout)
 
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def disable_pairability(self):
     self._adapter.disable_pairability()
 
@@ -166,12 +164,16 @@ class HandsFreeHeadset(ClassLogger):
     self._audio.unmute_microphone()
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
-  def set_microphone_volume(self, volume):
+  def set_microphone_playback_volume(self, volume):
     self._audio.set_microphone_playback_volume(volume)
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
-  def set_speaker_volume(self, volume):
-    self._audio.set_speaker_playback_volume(volume)
+  def set_microphone_capture_volume(self, volume):
+    self._audio.set_microphone_capture_volume(volume)
+
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
+  def set_volume(self, volume):
+    self._audio.set_speaker_volume(volume)
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def reset(self):

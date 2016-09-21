@@ -94,6 +94,7 @@ class HandCrankTelephoneControls(ClassLogger):
         self._headset.hangup_call()
       elif e.src == 'initiating_call':
         self._headset.cancel_call_initiation()
+        self._headset.hangup_call()
     except Exception, ex:
       self.log().error('Error caught while going idle: %s' % ex)
 

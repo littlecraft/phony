@@ -52,15 +52,20 @@ class Alsa(ClassLogger):
 
   @ClassLogger.TraceAs.event()
   def set_microphone_playback_volume(self, volume):
-    self._microphone_mixer.setvolume(volume)
+    for channel in range(0, self._microphone_channel_count()):
+      self._microphone_mixer.setvolume(volume, channel, alsaaudio.PCM_PLAYBACK)
 
   @ClassLogger.TraceAs.event()
   def set_microphone_capture_volume(self, volume):
-    self._microphone_mixer.setrec(volume)
+    for channel in range(0, self._microphone_channel_count()):
+      self._microphone_mixer.setvolume(volume, channel, alsaaudio.PCM_CAPTURE)
 
   @ClassLogger.TraceAs.event()
   def set_speaker_volume(self, volume):
     self._speaker_mixer.setvolume(volume)
+
+  def _microphone_channel_count(self):
+    return len(self._microphone_mixer.getvolume())
 
   def _find_suitable_mixers(self, card_index = -1):
     mic = None

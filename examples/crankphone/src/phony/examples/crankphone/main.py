@@ -119,7 +119,10 @@ class ApplicationMain(ClassLogger):
       'name': None,
       'pin': None,
       'visibility_timeout': 0,
-      'audio_card_index': -1
+      'audio_card_index': -1,
+      'mic_playback_volume': 50,
+      'mic_capture_volume': 80,
+      'volume': 80
     }
 
     if args.config_file:
@@ -149,6 +152,9 @@ class ApplicationMain(ClassLogger):
     parser.add_argument('--pin', help = 'Pin code to use when Simple Pairing mode is not enabled and/or unsupported by remote client')
     parser.add_argument('--visibility-timeout', type = int, help = 'Duration (seconds) to remain visible and pairable (default is 0, no timeout)')
     parser.add_argument('--audio-card-index', type = int, help = 'ALSA audio card index to use for capture and playback')
+    parser.add_argument('--mic-playback-volume', type = int, help = 'While in-call, the volume of the microphone that will be audible locally')
+    parser.add_argument('--mic-capture-volume', type = int, help = 'While in-call, the volume (gain) of the microphone')
+    parser.add_argument('--volume', type = int, help = 'The in-call volume')
     parser.add_argument('--log-level', help = 'Logging level: DEFAULT, CRITICAL, ERROR, WARNING, INFO, DEBUG')
     parser.add_argument('--config-file', help = 'Path to configuration file')
 
@@ -175,6 +181,9 @@ class ApplicationMain(ClassLogger):
 
       hs.start(config.name, config.pin)
       hs.enable_pairability(config.visibility_timeout)
+      hs.set_microphone_playback_volume(config.mic_playback_volume)
+      hs.set_microphone_capture_volume(config.mic_capture_volume)
+      hs.set_volume(config.volume)
 
       with phony.io.raspi.Inputs(self.input_layout) as io_inputs, \
            phony.io.raspi.Outputs(self.output_layout) as io_outputs, \
