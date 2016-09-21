@@ -6,4 +6,4 @@ Wants=bluetooth.service ofono.service
 [Service]
 Type=simple
 PrivateTmp=true
-ExecStart=/usr/local/bin/pulseaudio --system -vvvv
+ExecStart=/usr/local/bin/pulseaudio --system

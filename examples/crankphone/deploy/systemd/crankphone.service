@@ -8,8 +8,8 @@ Type=simple
 ExecStart=/usr/local/bin/crankphone
 RuntimeDirectory=crankphone
 Group=bluetooth
-Restart=always
+Restart=on-abnormal
 RestartSec=10
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
