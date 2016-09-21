@@ -27,6 +27,12 @@ class WithPostInstall(install):
     )
     print subprocess.check_output(config_pulseaudio)
 
+    enable_crankphone = os.path.join(
+      script_directory(),
+      'enable-crankphone.sh'
+    )
+    print subprocess.check_output(enable_crankphone)
+
 setup(
   name = 'crankphone',
   version = '1.0',
