@@ -54,9 +54,6 @@ class HandsFreeHeadset(ClassLogger):
     self._hfp.start()
     self._adapter.start(name, pincode)
 
-    self._audio.unmute_speaker()
-    self._audio.mute_microphone()
-
     self._started = True
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
@@ -104,8 +101,6 @@ class HandsFreeHeadset(ClassLogger):
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def initiate_call(self):
-    self.unmute_microphone()
-
     if self._hfp_audio_gateway:
       self._hfp_audio_gateway.begin_voice_dial()
     else:
@@ -113,8 +108,6 @@ class HandsFreeHeadset(ClassLogger):
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def cancel_call_initiation(self):
-    self.mute_microphone()
-
     if self._hfp_audio_gateway:
       self._hfp_audio_gateway.end_voice_dial()
     else:
@@ -122,8 +115,6 @@ class HandsFreeHeadset(ClassLogger):
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def dial(self, number):
-    self.unmute_microphone()
-
     if self._hfp_audio_gateway:
       self._hfp_audio_gateway.dial(number)
     else:
@@ -131,8 +122,6 @@ class HandsFreeHeadset(ClassLogger):
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def answer_call(self, path = None):
-    self.unmute_microphone()
-
     if self._hfp_audio_gateway:
       self._hfp_audio_gateway.answer(path)
     else:
@@ -142,9 +131,6 @@ class HandsFreeHeadset(ClassLogger):
   def hangup_call(self, path = None):
     if self._hfp_audio_gateway:
       self._hfp_audio_gateway.hangup(path)
-
-      if self._hfp_audio_gateway.call_count() == 0:
-        self.mute_microphone()
     else:
       raise Exception('No audio gateway is connected')
 
@@ -162,6 +148,14 @@ class HandsFreeHeadset(ClassLogger):
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def unmute_microphone(self):
     self._audio.unmute_microphone()
+
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
+  def mute_speaker(self):
+    self._audio.mute_speaker()
+
+  @ClassLogger.TraceAs.call(log_level = Levels.INFO)
+  def unmute_speaker(self):
+    self._audio.unmute_speaker()
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def set_microphone_playback_volume(self, volume):
