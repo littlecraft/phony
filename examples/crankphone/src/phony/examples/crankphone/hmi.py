@@ -88,16 +88,17 @@ class HandCrankTelephoneControls(ClassLogger):
 
   def _on_idle(self, e):
     try:
-      self._headset.mute_speaker()
-      self._headset.mute_microphone()
+      if self._headset:
+        self._headset.mute_speaker()
+        self._headset.mute_microphone()
 
-      if e.src == 'ringing':
-        self._ringer.stop_ringing()
-      elif e.src == 'in_call':
-        self._headset.hangup_call()
-      elif e.src == 'initiating_call':
-        self._headset.cancel_call_initiation()
-        self._headset.hangup_call()
+        if e.src == 'ringing':
+          self._ringer.stop_ringing()
+        elif e.src == 'in_call':
+          self._headset.hangup_call()
+        elif e.src == 'initiating_call':
+          self._headset.cancel_call_initiation()
+          self._headset.hangup_call()
     except Exception, ex:
       self.log().error('Error caught while going idle: %s' % ex)
 
