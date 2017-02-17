@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   width="46.062992096"
+   height="46.062992096"
+   id="svg2"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="RCP1317.svg">
+  <metadata
+     id="metadata18">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#dfdfdf"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1056"
+     id="namedview16"
+     showgrid="true"
+     inkscape:zoom="17.891351118"
+     inkscape:cx="32.2787773"
+     inkscape:cy="22.223784213"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0">
+    <inkscape:grid
+       type="xygrid"
+       id="grid4193"
+       units="mm"
+       spacingx="3.5433070866"
+       spacingy="3.5433070866"
+       originx="11.360403492"
+       originy="19.662467893" />
+  </sodipodi:namedview>
+  <defs
+     id="defs4" />
+  <g
+     id="copper0"
+     transform="translate(12.381496166,19.431495742)">
+    <g
+       id="copper1">
+      <circle
+         cx="3.5999999046"
+         cy="3.5999999046"
+         id="connector1pin"
+         r="2.7000000477"
+         style="fill:none;stroke:#f7bd13;stroke-width:1.7999999523" />
+      <circle
+         cx="17.700000763"
+         cy="3.5999999046"
+         id="connector0pin"
+         r="2.7000000477"
+         style="fill:none;stroke:#f7bd13;stroke-width:1.7999999523" />
+    </g>
+  </g>
+  <g
+     id="silkscreen"
+     transform="matrix(1.5436689405,0,0,1.945728537,3.1415721144,33.012390201)">
+    <ellipse
+       style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.7008990645;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path4311"
+       cx="12.884838104"
+       cy="-5.1296439171"
+       rx="14.569521904"
+       ry="11.486502647" />
+  </g>
+</svg>

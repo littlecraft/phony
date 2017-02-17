@@ -1,0 +1,838 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Fritzing (http://www.fritzing.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.2"
+   x="0in"
+   y="0in"
+   width="0.7in"
+   height="1.2in"
+   viewBox="0 0 50.4 86.4"
+   id="svg4833"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="Untitled Sketch 3_schem.svg">
+  <metadata
+     id="metadata4999">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs4997" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="960"
+     inkscape:window-height="1028"
+     id="namedview4995"
+     showgrid="false"
+     inkscape:zoom="4.054542663"
+     inkscape:cx="31.499999464"
+     inkscape:cy="54.000002146"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg4833" />
+  <rect
+     width="21.149999619"
+     height="85.5"
+     x="14.399999619"
+     y="0.44999998808"
+     id="rect4838"
+     style="fill:none;stroke:#000000;stroke-width:0.8999999762;stroke-linecap:round;stroke-linejoin:round" />
+  <text
+     x="41.715431"
+     id="label"
+     y="-23.063385"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:middle;fill:#000000;stroke:none"
+     transform="matrix(0,1,-1,0,0,0)">NJM2670D2</text>
+  <line
+     y1="7.1999998093"
+     x2="14.399999619"
+     y2="7.1999998093"
+     x1="0.34999901056"
+     id="line4841"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     connectorName="1"
+     width="14.399999619"
+     height="0.69999802113"
+     x="0"
+     y="6.8499999046"
+     id="connector0pin"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="0"
+     y="6.85"
+     id="connector0terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="15.8"
+     id="label0"
+     y="7.8999801"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:start;fill:#8c8c8c;stroke:none">1</text>
+  <text
+     class="text"
+     x="7.1999998"
+     font-size="2.5"
+     y="6.1500001"
+     id="text4846"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">SENSEA</text>
+  <line
+     y1="14.399999619"
+     x2="14.399999619"
+     y2="14.399999619"
+     x1="0.34999901056"
+     id="line4848"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     connectorName="2"
+     width="14.399999619"
+     height="0.69999802113"
+     x="0"
+     y="14.050000191"
+     id="connector1pin"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="0"
+     y="14.05"
+     id="connector1terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="15.8"
+     id="label1"
+     y="15.1"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:start;fill:#8c8c8c;stroke:none">2</text>
+  <text
+     class="text"
+     x="7.1999998"
+     font-size="2.5"
+     y="13.35"
+     id="text4853"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">INA1</text>
+  <line
+     y1="21.600000381"
+     x2="14.399999619"
+     y2="21.600000381"
+     x1="0.34999901056"
+     id="line4855"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     connectorName="3"
+     width="14.399999619"
+     height="0.69999802113"
+     x="0"
+     y="21.25"
+     id="connector2pin"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="0"
+     y="21.25"
+     id="connector2terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="15.8"
+     id="label2"
+     y="22.299999"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:start;fill:#8c8c8c;stroke:none">3</text>
+  <text
+     class="text"
+     x="7.1999998"
+     font-size="2.5"
+     y="20.549999"
+     id="text4860"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">ENABLEA</text>
+  <line
+     y1="28.799999237"
+     x2="14.399999619"
+     y2="28.799999237"
+     x1="0.34999901056"
+     id="line4862"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     connectorName="4"
+     width="14.399999619"
+     height="0.69999802113"
+     x="0"
+     y="28.450000763"
+     id="connector3pin"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="0"
+     y="28.45"
+     id="connector3terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="15.8"
+     id="label3"
+     y="29.5"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:start;fill:#8c8c8c;stroke:none">4</text>
+  <text
+     class="text"
+     x="7.1999998"
+     font-size="2.5"
+     y="27.75"
+     id="text4867"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">OUTA1</text>
+  <line
+     y1="36"
+     x2="14.399999619"
+     y2="36"
+     x1="0.34999901056"
+     id="line4869"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     connectorName="5"
+     width="14.399999619"
+     height="0.69999802113"
+     x="0"
+     y="35.650001526"
+     id="connector4pin"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="0"
+     y="35.65"
+     id="connector4terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="15.8"
+     id="label4"
+     y="36.700001"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:start;fill:#8c8c8c;stroke:none">5</text>
+  <text
+     class="text"
+     x="7.1999998"
+     font-size="2.5"
+     y="34.950001"
+     id="text4874"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">GND</text>
+  <line
+     y1="43.200000763"
+     x2="14.399999619"
+     y2="43.200000763"
+     x1="0.34999901056"
+     id="line4876"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     connectorName="6"
+     width="14.399999619"
+     height="0.69999802113"
+     x="0"
+     y="42.849998474"
+     id="connector5pin"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="0"
+     y="42.85"
+     id="connector5terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="15.8"
+     id="label5"
+     y="43.900002"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:start;fill:#8c8c8c;stroke:none">6</text>
+  <text
+     class="text"
+     x="7.1999998"
+     font-size="2.5"
+     y="42.150002"
+     id="text4881"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">GND</text>
+  <line
+     y1="50.400001526"
+     x2="14.399999619"
+     y2="50.400001526"
+     x1="0.34999901056"
+     id="line4883"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     connectorName="7"
+     width="14.399999619"
+     height="0.69999802113"
+     x="0"
+     y="50.049999237"
+     id="connector6pin"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="0"
+     y="50.05"
+     id="connector6terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="15.8"
+     id="label6"
+     y="51.099998"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:start;fill:#8c8c8c;stroke:none">7</text>
+  <text
+     class="text"
+     x="7.1999998"
+     font-size="2.5"
+     y="49.349998"
+     id="text4888"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">INB1</text>
+  <line
+     y1="57.599998474"
+     x2="14.399999619"
+     y2="57.599998474"
+     x1="0.34999901056"
+     id="line4890"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     connectorName="8"
+     width="14.399999619"
+     height="0.69999802113"
+     x="0"
+     y="57.25"
+     id="connector7pin"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="0"
+     y="57.25"
+     id="connector7terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="15.8"
+     id="label7"
+     y="58.299999"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:start;fill:#8c8c8c;stroke:none">8</text>
+  <text
+     class="text"
+     x="7.1999998"
+     font-size="2.5"
+     y="56.549999"
+     id="text4895"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">ENABLEB</text>
+  <line
+     y1="64.800003052"
+     x2="14.399999619"
+     y2="64.800003052"
+     x1="0.34999901056"
+     id="line4897"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     connectorName="9"
+     width="14.399999619"
+     height="0.69999802113"
+     x="0"
+     y="64.449996948"
+     id="connector8pin"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="0"
+     y="64.45"
+     id="connector8terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="15.8"
+     id="label8"
+     y="65.5"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:start;fill:#8c8c8c;stroke:none">9</text>
+  <text
+     class="text"
+     x="7.1999998"
+     font-size="2.5"
+     y="63.75"
+     id="text4902"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">NC</text>
+  <line
+     y1="72"
+     x2="14.399999619"
+     y2="72"
+     x1="0.34999901056"
+     id="line4904"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     connectorName="10"
+     width="14.399999619"
+     height="0.69999802113"
+     x="0"
+     y="71.650001526"
+     id="connector9pin"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="0"
+     y="71.65"
+     id="connector9terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="15.8"
+     id="label9"
+     y="72.699799"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:start;fill:#8c8c8c;stroke:none">10</text>
+  <text
+     class="text"
+     x="7.1999998"
+     font-size="2.5"
+     y="70.949997"
+     id="text4909"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">OUTB1</text>
+  <line
+     y1="79.199996948"
+     x2="14.399999619"
+     y2="79.199996948"
+     x1="0.34999901056"
+     id="line4911"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     connectorName="11"
+     width="14.399999619"
+     height="0.69999802113"
+     x="0"
+     y="78.850097656"
+     id="connector10pin"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="0"
+     y="78.8501"
+     id="connector10terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="15.8"
+     id="label10"
+     y="79.899803"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:start;fill:#8c8c8c;stroke:none">11</text>
+  <text
+     class="text"
+     x="7.1999998"
+     font-size="2.5"
+     y="78.1502"
+     id="text4916"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">SENSEB</text>
+  <line
+     y1="7.1999998093"
+     x2="50.049999237"
+     y2="7.1999998093"
+     x1="35.650001526"
+     id="line4918"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     width="14.399999619"
+     height="0.69999802113"
+     x="36"
+     y="6.8499999046"
+     id="connector21pin"
+     connectorname="22"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="50.4"
+     y="6.85"
+     id="connector21terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="34.599998"
+     id="label21"
+     y="7.8999801"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:end;fill:#8c8c8c;stroke:none">22</text>
+  <text
+     class="text"
+     x="43.200001"
+     font-size="2.5"
+     y="6.1500001"
+     id="text4923"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">VSA</text>
+  <line
+     y1="14.399999619"
+     x2="50.049999237"
+     y2="14.399999619"
+     x1="35.650001526"
+     id="line4925"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     width="14.399999619"
+     height="0.69999802113"
+     x="36"
+     y="14.050000191"
+     id="connector20pin"
+     connectorname="21"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="50.4"
+     y="14.05"
+     id="connector20terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="34.599998"
+     id="label20"
+     y="15.1"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:end;fill:#8c8c8c;stroke:none">21</text>
+  <text
+     class="text"
+     x="43.200001"
+     font-size="2.5"
+     y="13.35"
+     id="text4930"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">VCC</text>
+  <line
+     y1="21.600000381"
+     x2="50.049999237"
+     y2="21.600000381"
+     x1="35.650001526"
+     id="line4932"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     width="14.399999619"
+     height="0.69999802113"
+     x="36"
+     y="21.25"
+     id="connector19pin"
+     connectorname="20"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="50.4"
+     y="21.25"
+     id="connector19terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="34.599998"
+     id="label19"
+     y="22.299999"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:end;fill:#8c8c8c;stroke:none">20</text>
+  <text
+     class="text"
+     x="43.200001"
+     font-size="2.5"
+     y="20.549999"
+     id="text4937"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">INA2</text>
+  <line
+     y1="28.799999237"
+     x2="50.049999237"
+     y2="28.799999237"
+     x1="35.650001526"
+     id="line4939"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     width="14.399999619"
+     height="0.69999802113"
+     x="36"
+     y="28.450000763"
+     id="connector18pin"
+     connectorname="19"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="50.4"
+     y="28.45"
+     id="connector18terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="34.599998"
+     id="label18"
+     y="29.5"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:end;fill:#8c8c8c;stroke:none">19</text>
+  <text
+     class="text"
+     x="43.200001"
+     font-size="2.5"
+     y="27.75"
+     id="text4944"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">OUTA2</text>
+  <line
+     y1="36"
+     x2="50.049999237"
+     y2="36"
+     x1="35.650001526"
+     id="line4946"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     width="14.399999619"
+     height="0.69999802113"
+     x="36"
+     y="35.650001526"
+     id="connector17pin"
+     connectorname="18"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="50.4"
+     y="35.65"
+     id="connector17terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="34.599998"
+     id="label17"
+     y="36.700001"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:end;fill:#8c8c8c;stroke:none">18</text>
+  <text
+     class="text"
+     x="43.200001"
+     font-size="2.5"
+     y="34.950001"
+     id="text4951"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">GND</text>
+  <line
+     y1="43.200000763"
+     x2="50.049999237"
+     y2="43.200000763"
+     x1="35.650001526"
+     id="line4953"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     width="14.399999619"
+     height="0.69999802113"
+     x="36"
+     y="42.849998474"
+     id="connector16pin"
+     connectorname="17"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="50.4"
+     y="42.85"
+     id="connector16terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="34.599998"
+     id="label16"
+     y="43.900002"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:end;fill:#8c8c8c;stroke:none">17</text>
+  <text
+     class="text"
+     x="43.200001"
+     font-size="2.5"
+     y="42.150002"
+     id="text4958"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">GND</text>
+  <line
+     y1="50.400001526"
+     x2="50.049999237"
+     y2="50.400001526"
+     x1="35.650001526"
+     id="line4960"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     width="14.399999619"
+     height="0.69999802113"
+     x="36"
+     y="50.049999237"
+     id="connector15pin"
+     connectorname="16"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="50.4"
+     y="50.05"
+     id="connector15terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="34.599998"
+     id="label15"
+     y="51.099998"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:end;fill:#8c8c8c;stroke:none">16</text>
+  <text
+     class="text"
+     x="43.200001"
+     font-size="2.5"
+     y="49.349998"
+     id="text4965"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">INB2</text>
+  <line
+     y1="57.599998474"
+     x2="50.049999237"
+     y2="57.599998474"
+     x1="35.650001526"
+     id="line4967"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     width="14.399999619"
+     height="0.69999802113"
+     x="36"
+     y="57.25"
+     id="connector14pin"
+     connectorname="15"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="50.4"
+     y="57.25"
+     id="connector14terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="34.599998"
+     id="label14"
+     y="58.299999"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:end;fill:#8c8c8c;stroke:none">15</text>
+  <text
+     class="text"
+     x="43.200001"
+     font-size="2.5"
+     y="56.549999"
+     id="text4972"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">TSD_ARM</text>
+  <line
+     y1="64.800003052"
+     x2="50.049999237"
+     y2="64.800003052"
+     x1="35.650001526"
+     id="line4974"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     width="14.399999619"
+     height="0.69999802113"
+     x="36"
+     y="64.449996948"
+     id="connector13pin"
+     connectorname="14"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="50.4"
+     y="64.45"
+     id="connector13terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="34.599998"
+     id="label13"
+     y="65.5"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:end;fill:#8c8c8c;stroke:none">14</text>
+  <text
+     class="text"
+     x="43.200001"
+     font-size="2.5"
+     y="63.75"
+     id="text4979"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">NC</text>
+  <line
+     y1="72"
+     x2="50.049999237"
+     y2="72"
+     x1="35.650001526"
+     id="line4981"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     width="14.399999619"
+     height="0.69999802113"
+     x="36"
+     y="71.650001526"
+     id="connector12pin"
+     connectorname="13"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="50.4"
+     y="71.65"
+     id="connector12terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="34.599998"
+     id="label12"
+     y="72.699799"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:end;fill:#8c8c8c;stroke:none">13</text>
+  <text
+     class="text"
+     x="43.200001"
+     font-size="2.5"
+     y="70.949997"
+     id="text4986"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">OUTB2</text>
+  <line
+     y1="79.199996948"
+     x2="50.049999237"
+     y2="79.199996948"
+     x1="35.650001526"
+     id="line4988"
+     style="fill:none;stroke:#787878;stroke-width:0.6999980211;stroke-linecap:round;stroke-linejoin:round" />
+  <rect
+     width="14.399999619"
+     height="0.69999802113"
+     x="36"
+     y="78.850097656"
+     id="connector11pin"
+     connectorname="12"
+     style="fill:none;stroke-width:0" />
+  <g
+     width="0"
+     height="0.699998"
+     x="50.4"
+     y="78.8501"
+     id="connector11terminal"
+     style="fill:none;stroke-width:0" />
+  <text
+     x="34.599998"
+     id="label11"
+     y="79.899803"
+     font-size="3.5"
+     style="font-size:3.5px;font-family:'Droid Sans';text-anchor:end;fill:#8c8c8c;stroke:none">12</text>
+  <text
+     class="text"
+     x="43.200001"
+     font-size="2.5"
+     y="78.1502"
+     id="text4993"
+     style="font-size:2.5px;font-family:'Droid Sans';text-anchor:middle;fill:#8c8c8c;stroke:none;stroke-width:0">VSB</text>
+</svg>
