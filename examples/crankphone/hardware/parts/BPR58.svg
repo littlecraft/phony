@@ -1,143 +1,143 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="0.55118107796in"
-   version="1.2"
-   height="0.19685040414in"
-   viewBox="0 0 551.18108489 196.85039745"
-   id="svg5680"
-   inkscape:version="0.91 r13725"
-   sodipodi:docname="BPR58_2.svg">
-  <metadata
-     id="metadata5708">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-  <defs
-     id="defs5706" />
-  <sodipodi:namedview
-     pagecolor="#c0c0c0"
-     bordercolor="#666666"
-     borderopacity="1"
-     objecttolerance="10"
-     gridtolerance="10"
-     guidetolerance="10"
-     inkscape:pageopacity="0"
-     inkscape:pageshadow="2"
-     inkscape:window-width="1920"
-     inkscape:window-height="1056"
-     id="namedview5704"
-     showgrid="true"
-     inkscape:zoom="16.000000034"
-     inkscape:cx="9.8622900871"
-     inkscape:cy="-5.6475904542"
-     inkscape:window-x="0"
-     inkscape:window-y="24"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="silkscreen"
-     fit-margin-top="0"
-     fit-margin-left="0"
-     fit-margin-right="0"
-     fit-margin-bottom="0">
-    <inkscape:grid
-       type="xygrid"
-       id="grid5729"
-       units="mm"
-       spacingx="39.37007874"
-       spacingy="39.370077479"
-       originx="-12.940274719"
-       originy="41.224135418" />
-  </sodipodi:namedview>
-  <desc
-     id="desc5682">Fritzing footprint SVG</desc>
-  <g
-     id="silkscreen"
-     transform="matrix(0.71651195132,0,0,0.80244252281,105.55686332,63.887813117)">
-    <rect
-       style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:15.5283517838;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect5731"
-       width="753.7276001"
-       height="229.78567505"
-       x="-139.55627441"
-       y="-71.852508545" />
-    <g
-       id="g8398"
-       transform="translate(-0.19247436523,0.04032897949)">
-      <line
-         style="stroke:#ffffff;stroke-width:10"
-         id="line5685"
-         x2="147"
-         y2="43"
-         x1="75"
-         y1="43" />
-      <line
-         style="stroke:#ffffff;stroke-width:10"
-         id="line5687"
-         x2="400"
-         y2="43"
-         x1="347"
-         y1="43" />
-      <line
-         style="stroke:#ffffff;stroke-width:10"
-         id="line5689"
-         x2="347"
-         y2="10"
-         x1="147"
-         y1="10" />
-      <line
-         style="stroke:#ffffff;stroke-width:10"
-         id="line5691"
-         x2="347"
-         y2="76"
-         x1="347"
-         y1="10" />
-      <line
-         style="stroke:#ffffff;stroke-width:10"
-         id="line5693"
-         x2="147"
-         y2="76"
-         x1="347"
-         y1="76" />
-      <line
-         style="stroke:#ffffff;stroke-width:10"
-         id="line5695"
-         x2="147"
-         y2="10"
-         x1="147"
-         y1="76" />
-    </g>
-  </g>
-  <g
-     id="copper0"
-     transform="translate(78.015104026,53.377790414)">
-    <g
-       id="copper1">
-      <!-- <rect width="55" x="10" y="15.5" fill="none" height="55" stroke="rgb(255, 191, 0)" stroke-width="20" />  -->
-      <circle
-         cx="40.229885101"
-         cy="45.047412872"
-         r="27.5"
-         id="connector0pin"
-         style="fill:none;stroke:#ffbf00;stroke-width:20" />
-      <circle
-         cx="354.92098999"
-         cy="45.047412872"
-         r="27.5"
-         id="connector1pin"
-         style="fill:none;stroke:#ffbf00;stroke-width:20" />
-    </g>
-  </g>
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:cc="http://creativecommons.org/ns#"
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:svg="http://www.w3.org/2000/svg"
+ xmlns="http://www.w3.org/2000/svg"
+ xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+ xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+ width="0.55118107796in"
+ version="1.2"
+ height="0.19685040414in"
+ viewBox="0 0 551.18108489 196.85039745"
+ id="svg5680"
+ inkscape:version="0.91 r13725"
+ sodipodi:docname="BPR58.svg">
+<metadata
+ id="metadata5708">
+<rdf:RDF>
+<cc:Work
+ rdf:about="">
+<dc:format>image/svg+xml</dc:format>
+<dc:type
+ rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+<dc:title />
+</cc:Work>
+</rdf:RDF>
+</metadata>
+<defs
+ id="defs5706" />
+<sodipodi:namedview
+ pagecolor="#c0c0c0"
+ bordercolor="#666666"
+ borderopacity="1"
+ objecttolerance="10"
+ gridtolerance="10"
+ guidetolerance="10"
+ inkscape:pageopacity="0"
+ inkscape:pageshadow="2"
+ inkscape:window-width="1920"
+ inkscape:window-height="1056"
+ id="namedview5704"
+ showgrid="true"
+ inkscape:zoom="21.19110641"
+ inkscape:cx="23.558335099"
+ inkscape:cy="7.2153164045"
+ inkscape:window-x="0"
+ inkscape:window-y="24"
+ inkscape:window-maximized="1"
+ inkscape:current-layer="svg5680"
+ fit-margin-top="0"
+ fit-margin-left="0"
+ fit-margin-right="0"
+ fit-margin-bottom="0">
+<inkscape:grid
+ type="xygrid"
+ id="grid5729"
+ units="mm"
+ spacingx="39.37007874"
+ spacingy="39.370077479"
+ originx="-12.940274719"
+ originy="41.224135418" />
+</sodipodi:namedview>
+<desc
+ id="desc5682">Fritzing footprint SVG</desc>
+<g
+ id="silkscreen"
+ transform="matrix(0.71651195132,0,0,0.80244252281,105.55686332,63.887813117)">
+<rect
+ style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:15.5283517838;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+ id="rect5731"
+ width="753.7276001"
+ height="229.78567505"
+ x="-139.55627441"
+ y="-71.852508545" />
+<g
+ id="g8398"
+ transform="translate(6.0079212435,0.04032897949)">
+<line
+ style="stroke:#ffffff;stroke-width:10"
+ id="line5685"
+ x2="147"
+ y2="43"
+ x1="75"
+ y1="43" />
+<line
+ style="stroke:#ffffff;stroke-width:10"
+ id="line5687"
+ x2="400"
+ y2="43"
+ x1="347"
+ y1="43" />
+<line
+ style="stroke:#ffffff;stroke-width:10"
+ id="line5689"
+ x2="347"
+ y2="10"
+ x1="147"
+ y1="10" />
+<line
+ style="stroke:#ffffff;stroke-width:10"
+ id="line5691"
+ x2="347"
+ y2="76"
+ x1="347"
+ y1="10" />
+<line
+ style="stroke:#ffffff;stroke-width:10"
+ id="line5693"
+ x2="147"
+ y2="76"
+ x1="347"
+ y1="76" />
+<line
+ style="stroke:#ffffff;stroke-width:10"
+ id="line5695"
+ x2="147"
+ y2="10"
+ x1="147"
+ y1="76" />
+</g>
+</g>
+<g
+ id="copper0"
+ transform="translate(78.015104026,53.377790414)">
+<g
+ id="copper1">
+<!-- <rect width="55" x="10" y="15.5" fill="none" height="55" stroke="rgb(255, 191, 0)" stroke-width="20" />  -->
+<circle
+ cx="27.121658325"
+ cy="42.950099945"
+ r="27.5"
+ id="connector0pin"
+ style="fill:none;stroke:#ffbf00;stroke-width:20" />
+<circle
+ cx="382.18606567"
+ cy="42.95009613"
+ r="27.5"
+ id="connector1pin"
+ style="fill:none;stroke:#ffbf00;stroke-width:20" />
+</g>
+</g>
 </svg>
