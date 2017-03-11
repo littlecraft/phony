@@ -1,0 +1,56 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=ringer4
+*Date=12:04:31
+*CreatedBy=Fritzing 0.9.3b.04.19.5c895d327c44a3114e5fcc9d8260daf0cbb52806
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;DIP (Dual Inline) [THT];22.6252;-14.9699;-90;Bottom;IC1
+2;;300 mil [THT];16.2467;-30.2493;90;Bottom;D1
+3;;300 mil [THT];61.9667;-32.7385;-90;Bottom;D3
+4;1nF;100 mil [THT, multilayer];25.1367;-8.63388;180;Bottom;C1
+5;;300 mil [THT];59.4267;-32.7385;-90;Bottom;D2
+6;;;61.799;-52.704;0;Bottom;Hole4
+7;;NJM2670D2 (DIP22);37.8404;-23.8512;0;Bottom;IC2
+8;;;46.7043;-34.1844;-90;Bottom;TXT2
+9;140;0603 [SMD];8.62669;-35.7239;90;Top;R1
+10;;;54.3898;-34.4771;-90;Bottom;TXT2
+11;0.22;THT;23.8134;-29.7044;90;Bottom;R3
+12;;THT;71.6187;-21.9969;180;Bottom;Bell Out
+13;;;42.7491;-28.2033;0;Bottom;Raspberry Pi 1
+14;;;6.08669;-39.1139;0;Bottom;Via5
+15;;13 cm [THT];8.81746;-18.8444;-180;Bottom;L1
+16;;;64.5066;-41.6539;0;Bottom;Via4
+17;100nF;100 mil [THT, multilayer];22.6292;-42.8734;-90;Bottom;C3
+18;;0603 [SMD];6.08669;-35.7239;90;Top;PWR
+19;;TO92 [THT];43.9962;-44.105;0;Bottom;Q2
+20;2.2k;THT;28.9467;-13.7139;90;Bottom;R4
+21;3.3µF;100 mil [THT, electrolytic];50.5367;-8.63388;0;Bottom;C5
+22;1k;0603 [SMD];45.0366;-46.7339;180;Top;R6
+23;;;50.6426;-36.5497;-90;Bottom;TXT3
+24;180;THT;18.7867;-28.9539;-90;Bottom;R2
+25;3.5k;2010 [SMD];79.3293;-46.4402;90;Top;R9
+26;;;3.78426;-52.703;0;Bottom;Hole1
+27;3.5k;2010 [SMD];75.8724;-46.4402;90;Top;R8
+28;;PDIP;69.5007;-47.3077;180;Top;IC3
+29;1k;0603 [SMD];50.1166;-46.7339;180;Top;R7
+30;;;13.1546;-3.78423;0;Bottom;TXT1
+31;;TO220 [THT];11.1667;-42.6699;180;Bottom;Q1
+32;;;61.8204;-3.67081;0;Bottom;Hole3
+33;100µF;200 mil [THT, electrolytic];28.9504;-41.6312;90;Bottom;C4
+34;;TO92 [THT];51.6162;-44.105;0;Bottom;Q3
+35;;THT;71.6187;-29.6169;180;Bottom;Magneto In
+36;;OJ;50.5855;-26.7354;90;Bottom;U2
+37;;;74.1004;-5.47418;0;Bottom;IMG1
+38;100µF;100 mil [THT, electrolytic];18.9967;-42.9024;90;Bottom;C2
+39;;;3.78229;-3.63005;0;Bottom;Hole2
+40;;THT;71.6187;-37.2369;180;Bottom;Hook SW
+41;47k;THT;28.9456;-28.9312;-90;Bottom;R5
