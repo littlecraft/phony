@@ -1,12 +1,13 @@
 import dbus
 
 from dbus import service
+from config import Config
 from phony.base.log import ClassLogger
 
 class DbusDebugInterface(ClassLogger, dbus.service.Object):
 
-  OBJECT_PATH = '/org/littlecraft/Phony/Examples/CrankPhone'
-  SERVICE_NAME = 'org.littlecraft.Phony.Examples.CrankPhone'
+  OBJECT_PATH = Config.dbus_object_path
+  SERVICE_NAME = Config.dbus_service_name
 
   _bus = None
   _headset = None

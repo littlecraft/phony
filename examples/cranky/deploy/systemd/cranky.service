@@ -5,8 +5,8 @@ Wants=bluetooth.service ofono.service pulseaudio.service
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/crankphone
-RuntimeDirectory=crankphone
+ExecStart=/usr/local/bin/cranky
+RuntimeDirectory=cranky
 Group=bluetooth
 Restart=on-abnormal
 RestartSec=10

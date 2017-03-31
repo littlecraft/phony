@@ -4,14 +4,15 @@ import cmd
 import sys
 import dbus
 import os
+from phony.examples.cranky.config import Config
 
-class PhonyShell(cmd.Cmd):
-  SOCKET_FILE = '/run/crankphone/crankphone.socket'
+class CrankyShell(cmd.Cmd):
+  SOCKET_FILE = Config.socket_file
 
-  PHONY_OBJECT_PATH = '/org/littlecraft/Phony/Examples/CrankPhone'
-  PHONY_SERVICE_NAME = 'org.littlecraft.Phony.Examples.CrankPhone'
+  PHONY_OBJECT_PATH = Config.dbus_object_path
+  PHONY_SERVICE_NAME = Config.dbus_service_name
 
-  intro = 'Welcome to phony shell.  Type help or ? for list of commands.\n'
+  intro = 'Welcome to cranky shell.  Type help or ? for list of commands.\n'
   prompt = '(phony) '
   bus = None
   phony = None
@@ -133,4 +134,4 @@ class PhonyShell(cmd.Cmd):
     sys.exit()
 
 if __name__ == '__main__':
-  PhonyShell().cmdloop()
+  CrankyShell().cmdloop()

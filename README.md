@@ -27,7 +27,7 @@ _Note: Installing phony will attempt to automatically configure Pulseaudio to us
 
 ### A complete example
 
-For a complete example, see [examples/crankphone](https://github.com/littlecraft/phony/tree/master/examples/crankphone) which uses phony and a Raspberry Pi to turn a 1900's era hand crank telephone into a voice dialing bluetooth 'headset'.  Just like SparFun's [Port-O-Rotary](https://www.sparkfun.com/products/retired/287), but even more retro!
+For a complete example, see [examples/cranky](https://github.com/littlecraft/phony/tree/master/examples/cranky) which uses phony and a Raspberry Pi to turn a 1900's era hand crank telephone into a voice dialing bluetooth 'headset'.  Just like SparFun's [Port-O-Rotary](https://www.sparkfun.com/products/retired/287), but even more retro!
 
 ### Example of how to start the headset service, providing voice and numeric dialing
 
