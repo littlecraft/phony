@@ -15,7 +15,7 @@ _Note: The particular versions of these dependencies may need to be built from s
 # Installation
 
 ```
-$ sudo apt-get install python-dev python-setuptools python-gobject dbus-python rfkill
+$ sudo apt-get install python-dev python-setuptools python-gobject python-dbus rfkill
 $ git clone https://github.com/littlecraft/phony.git
 $ cd phony
 $ python setup.py install
