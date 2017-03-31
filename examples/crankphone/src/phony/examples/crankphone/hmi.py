@@ -71,8 +71,7 @@ class HandCrankTelephoneControls(ClassLogger):
     self._inputs = io_inputs
     self._inputs.on_rising_edge('hook_switch', self._swich_hook_high)
     self._inputs.on_falling_edge('hook_switch', self._switch_hook_low)
-    self._inputs.on_pulse('hand_crank_encoder', self._encoder_pulsed)
-    self._inputs.on_falling_edge('reset_switch', self._rest_switch_pressed)
+    self._inputs.on_pulse('magneto_sense', self._encoder_pulsed)
 
   @ClassLogger.TraceAs.call()
   def _reset(self):
@@ -172,10 +171,6 @@ class HandCrankTelephoneControls(ClassLogger):
     #  self._state.hand_crank_pulsed()
     #else:
     #  self.log().debug('Ignore crank pulse')
-
-  @ClassLogger.TraceAs.event()
-  def _rest_switch_pressed(self):
-    self._reset()
 
   def __enter__(self):
     return self

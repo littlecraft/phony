@@ -45,35 +45,38 @@ class ApplicationMain(ClassLogger):
   SOCKET_FILE = '/run/crankphone/crankphone.socket'
 
   input_layout = {
-    'reset_switch': {
-      'pin': 27,
-      'debounce': 200,
-      'pull_up_down': 'up'
-    },
     'hook_switch': {
       'pin': 17,
       'debounce': 200,
       'pull_up_down': 'up'
     },
-    'hand_crank_encoder': {
+    'magneto_sense': {
       'pin': 26,
-      'debounce': 50,
-      'pull_up_down': 'down'
+      'debounce': 200,
+      'pull_up_down': 'up'
     }
   }
 
   output_layout = {
     'ringer_enable': {
-      'pin': 22,
+      'pin': 4,
       'default': 0,
       'invert_logic': True
     },
     'ringer_1': {
-      'pin': 12,
+      'pin': 27,
       'default': 0
     },
     'ringer_2': {
-      'pin': 13,
+      'pin': 22,
+      'default': 0
+    },
+    'relay_select_ringer': {
+      'pin': 5,
+      'default': 0
+    },
+    'relay_select_magneto': {
+      'pin': 6,
       'default': 0
     }
   }
