@@ -19,6 +19,7 @@ import phony.audio.alsa
 import phony.bluetooth.adapters
 import phony.bluetooth.profiles.handsfree
 
+from config import Config
 from phony.base import log
 from phony.base.log import ClassLogger, ScopedLogger
 
@@ -41,8 +42,8 @@ class DictionaryConfig(ConfigParser.ConfigParser):
     return d
 
 class ApplicationMain(ClassLogger):
-  CONFIG_FILE = '/etc/crankphone/crankphone.conf'
-  SOCKET_FILE = '/run/crankphone/crankphone.socket'
+  CONFIG_FILE = Config.default_config_file
+  SOCKET_FILE = Config.socket_file
 
   input_layout = {
     'hook_switch': {

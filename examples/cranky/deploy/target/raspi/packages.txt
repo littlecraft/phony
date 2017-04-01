@@ -2,7 +2,7 @@
 python-dev
 python-setuptools
 python-gobject
-dbus-python
+python-dbus
 rfkill
 
 # For ofono

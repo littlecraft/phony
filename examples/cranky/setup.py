@@ -27,14 +27,14 @@ class WithPostInstall(install):
     )
     print subprocess.check_output(config_pulseaudio)
 
-    enable_crankphone = os.path.join(
+    enable_cranky = os.path.join(
       script_directory(),
-      'enable-crankphone.sh'
+      'enable-cranky.sh'
     )
-    print subprocess.check_output(enable_crankphone)
+    print subprocess.check_output(enable_cranky)
 
 setup(
-  name = 'crankphone',
+  name = 'cranky',
   version = '1.0',
   description = 'Using a Raspberry Pi, turn an old hand-crank telephone into a bluetooth hands-free headset',
   author = 'Matthew Waddell',
@@ -44,22 +44,17 @@ setup(
   package_dir = {'': 'src'},
   packages = find_packages('src'),
 
-  install_requires = [
-    'fysom',
-    'RPI.GPIO'
-  ],
-
-  scripts = ['crankphone', 'crankphone-client'],
+  scripts = ['cranky', 'cranky-client'],
 
   data_files = [
-    ('/etc/crankphone',
+    ('/etc/cranky',
       [
-        'deploy/crankphone.conf'
+        'deploy/cranky.conf'
       ]
     ),
     ('/etc/systemd/system',
       [
-        'deploy/systemd/crankphone.service',
+        'deploy/systemd/cranky.service',
         'deploy/systemd/pulseaudio.service'
       ]
     ),

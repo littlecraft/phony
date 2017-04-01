@@ -26,7 +26,7 @@ class RingSourceSelector(ClassLogger):
     self._select(0, force)
 
   def _select(self, selection, force):
-    if (force || selection != self._selected):
+    if (force or selection != self._selected):
       self._de_energize()
 
       if selection:
