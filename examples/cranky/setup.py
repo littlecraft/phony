@@ -44,11 +44,6 @@ setup(
   package_dir = {'': 'src'},
   packages = find_packages('src'),
 
-  install_requires = [
-    'fysom',
-    'RPI.GPIO'
-  ],
-
   scripts = ['cranky', 'cranky-client'],
 
   data_files = [

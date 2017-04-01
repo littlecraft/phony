@@ -108,9 +108,12 @@ _2 The integrated bluetooth chip onboard the Raspberry Pi 3 does not appear to w
 ## Building Bluez5
 
 ```
+$ sudo apt-get install autoconf libtool intltool libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev
 $ git clone https://git.kernel.org/pub/scm/bluetooth/bluez.git
 $ cd bluez
 $ git checkout tags/5.23
+$ ./bootstrap
+$ ./configure
 $ make -j4
 $ sudo make install
 ```
@@ -118,7 +121,7 @@ $ sudo make install
 ## Building Ofono
 
 ```
-$ sudo apt-get install glib2.0 mobile-broadband-provider-info autoconf libtool
+$ sudo apt-get install autoconf libtool intltool libdbus-1-dev glib2.0 mobile-broadband-provider-info
 $ git clone https://git.kernel.org/pub/scm/network/ofono/ofono.git
 $ cd ofono
 $ git checkout tags/1.17
@@ -131,8 +134,8 @@ $ sudo make install
 ## Building Pulseaudio 7
 
 ```
-$ sudo apt-get install autoconf libtool intltool libsndfile1-dev libcap-dev libsystemd-daemon0 libdbus-1-dev libspeex-dev libspeexdsp-dev libudev-dev libsbc-dev libbluetooth-dev libasound2-dev libjson-c-dev
-$ git clone git clone http://anongit.freedesktop.org/git/pulseaudio/pulseaudio.git
+$ sudo apt-get install autoconf libtool intltool libdbus-1-dev libsndfile1-dev libcap-dev libsystemd-daemon0 libspeex-dev libspeexdsp-dev libudev-dev libsbc-dev libbluetooth-dev libasound2-dev libjson-c-dev
+$ git clone http://anongit.freedesktop.org/git/pulseaudio/pulseaudio.git
 $ cd pulseaudio
 $ git checkout tags/v7.0
 $ ./bootstrap
