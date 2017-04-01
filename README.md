@@ -1,6 +1,5 @@
 # phony
-The goal of this module is to provide a convenient python based bluetooth hands-free profile (HFP) interface that allows you to easily "roll your own" hands-free headset service or device.
-
+Phony is a python module that provides a convenient bluetooth hands-free profile (HFP) interface and allows you to easily create your very own linux-based hands free service or device. Phony collects and abstracts much of the tedium and mystery associated with working with the linux bluetooth, telephony, and audio stack.  And what's more, it is designed to be deeply embedded, making it great for environments with limited or no HMI.
 
 # Prerequisites
 
@@ -27,7 +26,7 @@ _Note: Installing phony will attempt to automatically configure Pulseaudio to us
 
 ### A complete example
 
-For a complete example, see [examples/cranky](https://github.com/littlecraft/phony/tree/master/examples/cranky) which uses phony and a Raspberry Pi to turn a 1900's era hand crank telephone into a voice dialing bluetooth 'headset'.  Just like SparFun's [Port-O-Rotary](https://www.sparkfun.com/products/retired/287), but even more retro!
+For a complete example, see [examples/cranky](https://github.com/littlecraft/phony/tree/master/examples/cranky) which uses phony and a Raspberry Pi to turn a 1900's era hand crank telephone into a voice dialing bluetooth 'headset'.  Just like SparkFun's [Port-O-Rotary](https://www.sparkfun.com/products/retired/287), but even more retro!
 
 ### Example of how to start the headset service, providing voice and numeric dialing
 
