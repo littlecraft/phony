@@ -1,5 +1,5 @@
 # phony
-The goal of this module is to provide a convenient python based bluetooth hands-free profile (HFP) interface enabling you to more easily "roll your own" hands-free headset service or device.
+The goal of this module is to provide a convenient python based bluetooth hands-free profile (HFP) interface that allows you to easily "roll your own" hands-free headset service or device.
 
 
 # Prerequisites
