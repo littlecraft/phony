@@ -2,7 +2,28 @@ from fysom import Fysom
 from phony.base.log import ClassLogger
 
 class HandCrankTelephoneControls(ClassLogger):
-  ENCODER_PULSES_TO_INTITATE_CALL = 8
+  """
+    Old time hand crank telephone HMI:
+      Making a call:
+        1) Lift the receiver
+        2) Turn the hand crank a few times
+        3) Speak the name of the person you want to call
+           (i.e. "Call the horse doctor")
+        4) Have a conversation
+      Receiving a call:
+        1) When a call comes in, the bells start ringing
+        2) Lift the receiver
+        3) Say hi, and have a conversation
+
+  Notes:
+    Inspiration for the call initiating sequence is taken
+    from episodes of Lassie.
+
+    Alex Graham Bell suggested the salutation "ahoy-hoy"
+    when answering an incoming call.
+  """
+
+  MAGNETO_PULSES_TO_INTITATE_CALL = 8
 
   _inputs = None
   _ringer = None
@@ -10,12 +31,21 @@ class HandCrankTelephoneControls(ClassLogger):
 
   _state = None
 
+  _magneto_pulse_count = 0
+
   def __init__(self, io_inputs, bell_ringer, headset):
     ClassLogger.__init__(self)
 
     self._state = Fysom({
       'initial': 'idle',
       'events': [
+
+        #
+        # Defines an event that makes a state transition:
+        #
+        # {'name': 'event_name', 'src': 'source_state_name', 'dst': 'destination_state_name'}
+        #
+
         #
         # Ingress calling state transitions
         #
@@ -27,8 +57,10 @@ class HandCrankTelephoneControls(ClassLogger):
         #
         # Egress calling state transitions
         #
-        {'name': 'off_hook',      'src': 'idle',            'dst': 'initiating_call'},
-        {'name': 'call_began',    'src': 'initiating_call', 'dst': 'in_call'},
+        {'name': 'off_hook',          'src': 'idle',                    'dst': 'waiting_for_hand_crank'},
+        {'name': 'hand_crank_turned', 'src': 'waiting_for_hand_crank',  'dst': '='},
+        {'name': 'initiate_call',     'src': 'waiting_for_hand_crank',  'dst': 'initiating_call'},
+        {'name': 'call_began',        'src': 'initiating_call',         'dst': 'in_call'},
 
         #
         # In-call state transitions
@@ -40,11 +72,13 @@ class HandCrankTelephoneControls(ClassLogger):
         #
 
         # We don't care about call's ending in any other state except while ringing
-        {'name': 'call_ended',    'src': '*',               'dst': '='},
+        {'name': 'call_ended',      'src': '*',               'dst': '='},
         # Incoming calls in any state other than idle, do not cause a transition
-        {'name': 'incoming_call', 'src': '*',               'dst': '='},
+        {'name': 'incoming_call',   'src': '*',               'dst': '='},
         # Ignore off-hook switch bouncing
-        {'name': 'off_hook',      'src': '*',               'dst': '='}
+        {'name': 'off_hook',        'src': '*',               'dst': '='},
+        # Ignore magneto pulses unless waiting to initiate a call
+        {'name': 'hand_crank_turned',  'src': '*',               'dst': '='},
       ],
       'callbacks': {
         'onchangestate': self._on_change_state,
@@ -53,6 +87,7 @@ class HandCrankTelephoneControls(ClassLogger):
         'onidle': self._on_idle,
         'onringing': self._on_ringing,
         'onin_call': self._on_in_call,
+        'onhand_crank_turned': self._on_hand_crank_turned,
         'oninitiating_call': self._on_initiating_call,
 
         # Event callbacks
@@ -71,12 +106,7 @@ class HandCrankTelephoneControls(ClassLogger):
     self._inputs = io_inputs
     self._inputs.on_rising_edge('hook_switch', self._swich_hook_high)
     self._inputs.on_falling_edge('hook_switch', self._switch_hook_low)
-    self._inputs.on_pulse('magneto_sense', self._encoder_pulsed)
-
-  @ClassLogger.TraceAs.call()
-  def _reset(self):
-    self._ringer.stop_ringing()
-    self._headset.reset()
+    self._inputs.on_pulse('magneto_sense', self._magneto_pulsed)
 
   #
   # State change callbacks
@@ -87,6 +117,8 @@ class HandCrankTelephoneControls(ClassLogger):
 
   def _on_idle(self, e):
     try:
+      self._magneto_pulse_count = 0
+
       if self._headset:
         self._headset.mute_speaker()
         self._headset.mute_microphone()
@@ -98,8 +130,16 @@ class HandCrankTelephoneControls(ClassLogger):
         elif e.src == 'initiating_call':
           self._headset.cancel_call_initiation()
           self._headset.hangup_call()
+
     except Exception, ex:
       self.log().error('Error caught while going idle: %s' % ex)
+
+  def _on_hand_crank_turned(self, e):
+    if e.src == 'waiting_for_hand_crank':
+      self._magneto_pulse_count = self._magneto_pulse_count + 1
+
+      if self._magneto_pulse_count >= self.MAGNETO_PULSES_TO_INTITATE_CALL:
+        self._state.initiate_call()
 
   def _on_ringing(self, e):
     try:
@@ -119,10 +159,9 @@ class HandCrankTelephoneControls(ClassLogger):
 
   def _on_initiating_call(self, e):
     try:
-      if e.src == 'idle':
-        self._headset.unmute_speaker()
-        self._headset.unmute_microphone()
-        self._headset.initiate_call()
+      self._headset.unmute_speaker()
+      self._headset.unmute_microphone()
+      self._headset.initiate_call()
     except Exception, ex:
       self.log().error('Error caught while going initiating_call: %s' % ex)
 
@@ -165,12 +204,8 @@ class HandCrankTelephoneControls(ClassLogger):
   def _switch_hook_low(self):
     self._state.on_hook()
 
-  def _encoder_pulsed(self):
-    pass
-    #if self._state.can('hand_crank_pulsed'):
-    #  self._state.hand_crank_pulsed()
-    #else:
-    #  self.log().debug('Ignore crank pulse')
+  def _magneto_pulsed(self):
+    self._state.hand_crank_turned()
 
   def __enter__(self):
     return self
