@@ -1,5 +1,7 @@
 # phony
-Phony is a python module that provides a convenient bluetooth hands-free profile (HFP) interface and allows you to easily create your very own linux-based hands free service or device. Phony collects and abstracts much of the tedium and mystery associated with working with the linux bluetooth, telephony, and audio stack.  And what's more, it is designed to be deeply embedded, making it great for environments with limited or no HMI.
+Phony is a python module that provides a convenient bluetooth hands-free profile (HFP) interface and allows you to easily create your very own linux-based hands free service or device.
+
+Phony collects and abstracts much of the tedium and mystery associated with working with the linux bluetooth, telephony, and audio stack.  And what's more, it is designed to be deeply embedded, making it great for environments with limited or no HMI.
 
 # Prerequisites
 
