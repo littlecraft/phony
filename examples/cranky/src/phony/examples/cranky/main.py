@@ -1,7 +1,6 @@
 import os
-import sys
 import dbus
-import signal
+import atexit
 import gobject
 
 import ast
@@ -42,8 +41,8 @@ class DictionaryConfig(ConfigParser.ConfigParser):
     return d
 
 class ApplicationMain(ClassLogger):
-  CONFIG_FILE = Config.default_config_file
   SOCKET_FILE = Config.socket_file
+  CONFIG_FILE = Config.default_config_file
 
   input_layout = {
     'hook_switch': {
@@ -85,39 +84,21 @@ class ApplicationMain(ClassLogger):
   def __init__(self):
     ClassLogger.__init__(self)
 
+    self.cleanup_handlers = []
+
   def main_loop(self):
     return gobject.MainLoop()
 
-  def sigint_handler(self, signal, frame):
-    self.log().info('SIGINT, exiting...')
-    self.remove_socket_file()
-    sys.exit(1)
+  def on_exit(self):
+    self.log().info('Exiting. Cleaning up...')
+    map(lambda f: f(), self.cleanup_handlers)
 
   def session_bus_path(self):
     return os.environ.get('DBUS_SESSION_BUS_ADDRESS')
 
-  def create_socket_file(self):
-    if os.path.isfile(self.SOCKET_FILE):
-      raise Exception('Socket file %s exists, already running?' % self.SOCKET_FILE)
-
-    try:
-      socket_file = open(self.SOCKET_FILE, 'w')
-
-      session_bus_path = self.session_bus_path()
-      if session_bus_path:
-        socket_file.write(session_bus_path)
-    except Exception, ex:
-      self.log().warning('Unable to write socket file %s: %s' % (self.SOCKET_FILE, ex))
-
-  def remove_socket_file(self):
-    try:
-      if os.path.isfile(self.SOCKET_FILE):
-        os.remove(self.SOCKET_FILE)
-    except Exception, ex:
-      self.log().warning('Unable to remove socket file %s: %s' % (self.SOCKET_FILE, ex))
-
   def configuration(self, args):
     merged = {
+      'socket_file': self.SOCKET_FILE,
       'log_level': 'DEFAULT',
       'interface': None,
       'name': None,
@@ -148,7 +129,7 @@ class ApplicationMain(ClassLogger):
     return argparse.Namespace(**merged)
 
   def run(self):
-    signal.signal(signal.SIGINT, self.sigint_handler)
+    atexit.register(self.on_exit)
 
     parser = argparse.ArgumentParser(description = 'Bluetooth Handsfree telephony service')
     parser.add_argument('--interface', help = 'The BT interface to listen on')
@@ -160,14 +141,13 @@ class ApplicationMain(ClassLogger):
     parser.add_argument('--mic-capture-volume', type = int, help = 'While in-call, the volume (gain) of the microphone')
     parser.add_argument('--volume', type = int, help = 'The in-call volume')
     parser.add_argument('--log-level', help = 'Logging level: DEFAULT, CRITICAL, ERROR, WARNING, INFO, DEBUG')
-    parser.add_argument('--config-file', help = 'Path to configuration file')
+    parser.add_argument('--config-file', help = 'Path to configuration file, defaulst to %s' % self.CONFIG_FILE)
+    parser.add_argument('--socket-file', help = 'Path to service socket file, defaults to %s' % self.SOCKET_FILE)
 
     config = self.configuration(parser.parse_args())
 
     level = log.Levels.parse(config.log_level)
     log.send_to_stdout(level = level)
-
-    self.create_socket_file()
 
     #
     # To enforce use of pincode, set `hciconfig <hci> sspmode 0`
@@ -178,7 +158,8 @@ class ApplicationMain(ClassLogger):
     session_bus_path = self.session_bus_path()
     bus = phony.base.ipc.BusProvider(session_bus_path)
 
-    with phony.bluetooth.adapters.Bluez5(bus, config.interface) as adapter, \
+    with phony.base.ipc.OwnedSocketFile(bus, config.socket_file) as socket, \
+         phony.bluetooth.adapters.Bluez5(bus, config.interface) as adapter, \
          phony.bluetooth.profiles.handsfree.Ofono(bus) as hfp, \
          phony.audio.alsa.Alsa(config.audio_card_index) as audio, \
          phony.headset.HandsFreeHeadset(bus, adapter, hfp, audio) as hs:
@@ -197,8 +178,6 @@ class ApplicationMain(ClassLogger):
 
         with ScopedLogger(self, 'main_loop'):
           self.main_loop().run()
-
-    self.remove_socket_file()
 
 if __name__ == '__main__':
   main = ApplicationMain()
