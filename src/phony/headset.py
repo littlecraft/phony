@@ -7,7 +7,10 @@ class HandsFreeHeadset(ClassLogger):
   """
   Behaves like a bluetooth headset, allowing only one device
   to connect/pair at a time, requiring that the device
-  provide HFP and voice-dialing capabilities.
+  provide HFP and voice-dialing capabilities.  The given audio
+  device is managed according to whether or not the 'headset'
+  is in or initiating a call.  At all other times the audio
+  will be muted.
   """
 
   _started = False
@@ -51,6 +54,9 @@ class HandsFreeHeadset(ClassLogger):
     self.enable()
 
     self._audio.start()
+    self.mute_microphone()
+    self.mute_speaker()
+
     self._hfp.start()
     self._adapter.start(name, pincode)
 
@@ -102,8 +108,10 @@ class HandsFreeHeadset(ClassLogger):
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def initiate_call(self):
     if self._hfp_audio_gateway:
+      self._call_prologue()
       self._hfp_audio_gateway.begin_voice_dial()
     else:
+      self._call_epilogue()
       raise Exception('No audio gateway is connected')
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
@@ -113,18 +121,24 @@ class HandsFreeHeadset(ClassLogger):
     else:
       raise Exception('No audio gateway is connected')
 
+    self._call_epilogue()
+
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def dial(self, number):
     if self._hfp_audio_gateway:
+      self._call_prologue()
       self._hfp_audio_gateway.dial(number)
     else:
+      self._call_epilogue()
       raise Exception('No audio gateway is connected')
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def answer_call(self, path = None):
     if self._hfp_audio_gateway:
+      self._call_prologue()
       self._hfp_audio_gateway.answer(path)
     else:
+      self._call_epilogue()
       raise Exception('No audio gateway is connected')
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
@@ -133,6 +147,8 @@ class HandsFreeHeadset(ClassLogger):
       self._hfp_audio_gateway.hangup(path)
     else:
       raise Exception('No audio gateway is connected')
+
+    self._call_epilogue()
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
   def deflect_call_to_voicemail(self, path = None):
@@ -268,6 +284,14 @@ class HandsFreeHeadset(ClassLogger):
   #
   # Private methods
   #
+
+  def _call_prologue(self):
+    self.unmute_speaker()
+    self.unmute_microphone()
+
+  def _call_epilogue(self):
+    self.mute_speaker()
+    self.mute_microphone()
 
   def _exec(self, command):
     self.log().debug('Running: ' + command)

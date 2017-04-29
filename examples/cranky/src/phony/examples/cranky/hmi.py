@@ -120,9 +120,6 @@ class HandCrankTelephoneControls(ClassLogger):
       self._magneto_pulse_count = 0
 
       if self._headset:
-        self._headset.mute_speaker()
-        self._headset.mute_microphone()
-
         if e.src == 'ringing':
           self._ringer.stop_ringing()
         elif e.src == 'in_call':
@@ -151,16 +148,12 @@ class HandCrankTelephoneControls(ClassLogger):
     try:
       if e.src == 'ringing':
         self._ringer.stop_ringing()
-        self._headset.unmute_speaker()
-        self._headset.unmute_microphone()
         self._headset.answer_call()
     except Exception, ex:
       self.log().error('Error caught while going in_call: %s' % ex)
 
   def _on_initiating_call(self, e):
     try:
-      self._headset.unmute_speaker()
-      self._headset.unmute_microphone()
       self._headset.initiate_call()
     except Exception, ex:
       self.log().error('Error caught while going initiating_call: %s' % ex)
@@ -168,6 +161,7 @@ class HandCrankTelephoneControls(ClassLogger):
   def _on_incoming_call(self, e):
     try:
       if e.src != 'idle':
+        self.log().info('Already in call (%s), deflecting new call to voicemail' % e.src)
         self._headset.deflect_call_to_voicemail()
     except Exception, ex:
       self.log().error('Error caught for event call_began: %s' % ex)
@@ -191,6 +185,24 @@ class HandCrankTelephoneControls(ClassLogger):
   @ClassLogger.TraceAs.event()
   def _device_connected(self):
     self._ringer.short_ring()
+
+  #
+  # Debugging
+  #
+  def get_state(self):
+    return self._state.current
+
+  @ClassLogger.TraceAs.event()
+  def simulate_off_hook(self):
+    self._state.off_hook()
+
+  @ClassLogger.TraceAs.event()
+  def simulate_on_hook(self):
+    self._state.on_hook()
+
+  @ClassLogger.TraceAs.event()
+  def simulate_hand_crank_turned(self):
+    self._state.hand_crank_turned()
 
   #
   # Low-level IO callbacks

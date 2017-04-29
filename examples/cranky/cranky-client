@@ -109,6 +109,13 @@ class CrankyShell(cmd.Cmd):
     except Exception, ex:
       print str(ex)
 
+  def do_state(self, arg):
+    try:
+      state = self.phony.GetState()
+      print state
+    except Exception, ex:
+        print str(ex)
+
   def do_start_ringing(self, arg):
     try:
       self.phony.StartRinging()
@@ -124,6 +131,24 @@ class CrankyShell(cmd.Cmd):
   def do_short_ring(self, arg):
     try:
       self.phony.ShortRing()
+    except Exception, ex:
+      print str(ex)
+
+  def do_simulate_off_hook(self, arg):
+    try:
+        self.phony.SimulateOffHook()
+    except Exception, ex:
+      print str(ex)
+
+  def do_simulate_on_hook(self, arg):
+    try:
+        self.phony.SimulateOnHook()
+    except Exception, ex:
+      print str(ex)
+
+  def do_simulate_hand_crank_turned(self, arg):
+    try:
+        self.phony.SimulateHandCrankTurned()
     except Exception, ex:
       print str(ex)
 
