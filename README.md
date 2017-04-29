@@ -88,7 +88,17 @@ class ExampleHeadsetService:
 ```
 
 
-# Appendix A: Bluetooth Hardware
+# Appendix A: Hardware
+
+## Audio
+
+Phony requires an audio adapter that has an audio input and an output.  If you intend to use phony on a device like a Raspberry Pi, you will need an external audio adapter, like this one:
+
+* [USB Audio Adapter](https://www.amazon.com/Sabrent-External-Adapter-Windows-AU-MMSA/dp/B00IRVQ0F8)
+
+
+## Bluetooth
+
 Ensure that you have an HFP capable bluetooth dongle or adapter (e.g. a CSR8510 A10, or BCM20702A0 work well).
 
 Tested bluetooth adapters:
