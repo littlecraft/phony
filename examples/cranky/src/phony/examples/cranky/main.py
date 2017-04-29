@@ -72,11 +72,11 @@ class ApplicationMain(ClassLogger):
       'default': 0
     },
     'relay_select_ringer': {
-      'pin': 5,
+      'pin': 6,
       'default': 0
     },
     'relay_select_magneto': {
-      'pin': 6,
+      'pin': 5,
       'default': 0
     }
   }
@@ -173,8 +173,8 @@ class ApplicationMain(ClassLogger):
       with phony.io.raspi.Inputs(self.input_layout) as io_inputs, \
            phony.io.raspi.Outputs(self.output_layout) as io_outputs, \
            ringer.BellRinger(io_outputs) as bells, \
-           hmi.HandCrankTelephoneControls(io_inputs, bells, hs), \
-           debug.DbusDebugInterface(bus, hs, bells):
+           hmi.HandCrankTelephoneControls(io_inputs, bells, hs) as controls, \
+           debug.DbusDebugInterface(bus, hs, bells, controls):
 
         with ScopedLogger(self, 'main_loop'):
           self.main_loop().run()
