@@ -68,6 +68,17 @@ setup(
         'deploy/pulse/daemon.conf',
         'deploy/pulse/system.pa'
       ]
+    ),
+    ('/usr/local/etc/dbus-1/system.d',
+      [
+        'deploy/dbus/pulseaudio-system.conf'
+      ]
+    ),
+    ('/usr/local/etc/pulse',
+      [
+        'deploy/pulse/daemon.conf',
+        'deploy/pulse/system.pa'
+      ]
     )
   ],
 
