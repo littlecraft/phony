@@ -12,12 +12,14 @@ class DbusDebugInterface(ClassLogger, dbus.service.Object):
   _bus = None
   _headset = None
   _ringer = None
+  _hmi = None
 
-  def __init__(self, bus_provider, headset, ringer):
+  def __init__(self, bus_provider, headset, ringer, hmi):
     ClassLogger.__init__(self)
 
     self._headset = headset
     self._ringer = ringer
+    self._hmi = hmi
 
     self._bus = bus_provider.session_bus()
 
@@ -27,7 +29,7 @@ class DbusDebugInterface(ClassLogger, dbus.service.Object):
 
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def BeginVoiceDial(self):
-    self._headset.answer_call()
+    self._headset.initiate_call()
 
   @dbus.service.method(dbus_interface = SERVICE_NAME,
     input_signature = 's')
@@ -36,18 +38,20 @@ class DbusDebugInterface(ClassLogger, dbus.service.Object):
 
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def Answer(self):
-    self._headset.answer()
+    self._headset.answer_call()
 
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def HangUp(self):
-    self._headset.hangup()
+    self._headset.hangup_call()
 
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def Mute(self):
+    self._headset.mute_speaker()
     self._headset.mute_microphone()
 
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def Unmute(self):
+    self._headset.unmute_speaker()
     self._headset.unmute_microphone()
 
   @dbus.service.method(dbus_interface = SERVICE_NAME,
@@ -69,6 +73,10 @@ class DbusDebugInterface(ClassLogger, dbus.service.Object):
     return self._headset.get_status()
 
   @dbus.service.method(dbus_interface = SERVICE_NAME)
+  def GetState(self):
+    return self._hmi.get_state()
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME)
   def StartRinging(self):
     self._ringer.start_ringing()
 
@@ -79,6 +87,18 @@ class DbusDebugInterface(ClassLogger, dbus.service.Object):
   @dbus.service.method(dbus_interface = SERVICE_NAME)
   def ShortRing(self):
     self._ringer.short_ring()
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME)
+  def SimulateOffHook(self):
+    self._hmi.simulate_off_hook()
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME)
+  def SimulateOnHook(self):
+    self._hmi.simulate_on_hook()
+
+  @dbus.service.method(dbus_interface = SERVICE_NAME)
+  def SimulateHandCrankTurned(self):
+    self._hmi.simulate_hand_crank_turned()
 
   def __enter__(self):
     return self

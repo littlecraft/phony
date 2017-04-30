@@ -1,15 +1,21 @@
 # Overview
-Cranky is an example application for the raspberry pi, based on the phony module.  When accompanied by [custom supporting hardware](https://github.com/littlecraft/phony/tree/master/examples/cranky/hardware), as well as an external USB audio device, and Bluetooth adapter, this application is used to create a functional hands-free device out of a 1900's era hand-crank telephone.  Aside from its precise, and obviously impractical application, cranky can be used as a model for how you can turn a raspberry pi into your own hands free device, complete with an HMI using the raspberry pi's GPIO.
+Cranky is an application using phony on a Raspberry Pi, creating an embedded, linux-based hands free bluetooth device from a 1900's era hand-crank telephone.
 
-A custom pi-hat, [here](https://github.com/littlecraft/phony/tree/master/examples/cranky/hardware) is used to drive the ringer bells, and receieve hardware events from the hook switch and magneto of the old telephone.  In addition to this, the example project uses the following off-the-shelf hardware (which is likely replacible by other devices):
+A custom [pi-hat](https://github.com/littlecraft/phony/tree/master/examples/cranky/hardware) is used to drive the ringer bells, and receive hardware events from the hook switch and magneto of the old telephone.  Much of the hardware design is borrowed from SparkFun's [Port-O-Rotary](https://www.sparkfun.com/products/retired/287), and adjusted to work with a much older generation of telephone.
+
+In addition to that, the project uses the following off-the-shelf hardware (which is likely replaceable by other devices):
 
 * [USB Audio Adapter](https://www.amazon.com/Sabrent-External-Adapter-Windows-AU-MMSA/dp/B00IRVQ0F8)
 * [USB Bluetooth Adapter](https://www.amazon.com/Panda-Bluetooth-4-0-Nano-Adapter/dp/B00BCU4TZE)
 
+But aside from its obviously impracticality, cranky can be used as a model for how you can turn a raspberry pi into your very own hands free device using phony, complete with an HMI using the raspberry pi's GPIO.
+
+# Warning
+By default cranky is installed as a background (systemd) service, and in order to make everything work, during installation, pulseaudio is configured to run as a background service as well.  This is a non-standard configuration, but for embedded systems, it is usually the way to go.  However, if you attempt to run the installation on your regular machine, you will likely discover that your audio no longer works as it had.
 
 # Pre-requisits
 
-Follow the installation and Appendix B pre-requisite instructions in the [README within the phony repo](https://github.com/littlecraft/phony)
+Follow the installation and Appendix B pre-requisite instructions in the [README of the phony repo](https://github.com/littlecraft/phony)
 
 # Installation
 
@@ -18,6 +24,7 @@ $ sudo apt-get install dbus-x11
 $ sudo pip install -r requirements.txt
 $ sudo python setup.py install
 ```
+
 # Configure
 Take a look at /etc/cranky/cranky.conf for configuration points.
 ```
@@ -69,5 +76,27 @@ Apr 29 02:28:26 raspberrypi cranky[2120]: 2017-04-29 02:28:26.831 phony.examples
 # Interactive REPL
 
 ```
-$ sudo cranky-client
+$ sudo crankyctl
+Welcome to cranky shell.  Type help or ? for list of commands.
+
+(phony) help
+
+Documented commands (type help <topic>):
+========================================
+help
+
+Undocumented commands:
+======================
+answer  mic_volume  short_ring                  speaker_volume  stop_ringing
+dial    mute        simulate_hand_crank_turned  start_ringing   unmute      
+exit    quit        simulate_off_hook           state           voice       
+hangup  reset       simulate_on_hook            status        
+
+(phony) status
+Device:   <YourDeviceMac> <YourDeviceName>
+AudioGateway:   Path: /hfp/org/bluez/hci0/dev_<YourDeviceMac>
+Features: three-way-calling echo-canceling-and-noise-reduction voice-recognition release-all-held create-multiparty hf-indicators 
+Adapter:    <YourBluetoothDeviceMac> raspberrypi #1
+AudioCard:    hw:1
+(phony) simulate_off_hook
 ```
