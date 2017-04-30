@@ -23,6 +23,12 @@ class WithPostInstall(install):
 
     config_pulseaudio = os.path.join(
       script_directory(),
+      'pulse.sh'
+    )
+    print subprocess.check_output(config_pulseaudio)
+
+    config_pulseaudio = os.path.join(
+      script_directory(),
       'bluetooth-group.sh'
     )
     print subprocess.check_output(config_pulseaudio)
@@ -44,7 +50,7 @@ setup(
   package_dir = {'': 'src'},
   packages = find_packages('src'),
 
-  scripts = ['cranky', 'cranky-client'],
+  scripts = ['cranky', 'crankyctl'],
 
   data_files = [
     ('/etc/cranky',
@@ -60,7 +66,7 @@ setup(
     ),
     ('/etc/dbus-1/system.d',
       [
-        'deploy/dbus/pulseaudio-system.conf'
+        'deploy/dbus/pulseaudio.conf'
       ]
     ),
     ('/etc/pulse',
@@ -71,7 +77,7 @@ setup(
     ),
     ('/usr/local/etc/dbus-1/system.d',
       [
-        'deploy/dbus/pulseaudio-system.conf'
+        'deploy/dbus/pulseaudio.conf'
       ]
     ),
     ('/usr/local/etc/pulse',

@@ -52,7 +52,8 @@ class HandCrankTelephoneControls(ClassLogger):
         {'name': 'incoming_call', 'src': 'idle',            'dst': 'ringing'},
         {'name': 'call_ended',    'src': 'ringing',         'dst': 'idle'},
         {'name': 'off_hook',      'src': 'ringing',         'dst': 'in_call'},
-        {'name': 'call_began',    'src': '*',               'dst': '='},
+        # This might happen if the call was answered on the cell phone
+        {'name': 'call_began',    'src': 'ringing',         'dst': 'in_call'},
 
         #
         # Egress calling state transitions
