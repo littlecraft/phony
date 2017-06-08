@@ -36,6 +36,7 @@ For a complete example, see [examples/cranky](https://github.com/littlecraft/pho
 import gobject
 import phony.headset
 import phony.base.ipc
+import phony.base.log
 import phony.audio.alsa
 import phony.bluetooth.adapters
 import phony.bluetooth.profiles.handsfree
@@ -78,13 +79,21 @@ class ExampleHeadsetService:
 
       self._hs = hs
 
-      gobject.MainLoop()
+      gobject.MainLoop().run()
 
   def voice_dial(self):
     self._hs.initiate_call()
 
   def dial_number(self, phone_number):
     self._hs.dial(phone_number)
+    
+if __name__ == '__main__':
+  # Enable debug logging to the console
+  phony.base.log.send_to_stdout()
+  
+  # Start the HFP service class
+  service = ExampleHeadsetService()
+  service.start()
 ```
 
 
