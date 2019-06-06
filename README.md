@@ -177,7 +177,7 @@ $ sudo apt-get install autoconf libtool intltool libdbus-1-dev glib2.0 mobile-br
 $ git clone https://git.kernel.org/pub/scm/network/ofono/ofono.git
 $ cd ofono
 $ git checkout tags/1.17
-$ ./bootstrap.sh
+$ ./bootstrap
 $ ./configure
 $ make -j4
 $ sudo make install
@@ -190,7 +190,7 @@ $ sudo apt-get install autoconf libtool intltool libdbus-1-dev libsndfile1-dev l
 $ git clone http://anongit.freedesktop.org/git/pulseaudio/pulseaudio.git
 $ cd pulseaudio
 $ git checkout tags/v7.0
-$ ./bootstrap
+$ ./bootstrap.sh
 $ ./configure
 $ make -j4
 $ sudo make install
