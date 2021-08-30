@@ -26,7 +26,7 @@ class TypeLabel:
     else:
       args = ''
 
-    if not isinstance(method, basestring):
+    if not isinstance(method, str):
       method = method.__name__
 
     return type(instance).__name__ + '.' + method + '(' + args + ')'
@@ -41,7 +41,7 @@ class InstanceLabel:
     else:
       args = ''
 
-    if not isinstance(method, basestring):
+    if not isinstance(method, str):
       method = method.__name__
 
     type_and_instance = type(instance).__name__ + '.' + str(id(instance))

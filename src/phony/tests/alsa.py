@@ -16,9 +16,6 @@
 ## python mixertest.py Capture [un]rec   # [dis/en]able capture
 ## python mixertest.py Master 0,[un]mute   # [un]mute channel 0
 ## python mixertest.py Capture 0,[un]rec   # [dis/en]able capture on channel 0
-
-from __future__ import print_function
-
 import sys
 import getopt
 import alsaaudio

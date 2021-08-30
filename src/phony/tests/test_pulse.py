@@ -1,8 +1,9 @@
-import unit
 import phony.base.ipc
 from phony.audio.pulse import PulseAudio
 
-test = unit.setup()
+from . import util
+test = util.setup()
+
 
 """
 def test_PulseAudio__find_microphone_source():
