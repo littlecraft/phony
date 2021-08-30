@@ -86,7 +86,7 @@ class Ofono(ClassLogger):
   _state = State.start()
 
   def __init__(self, bus):
-    ClassLogger.__init__(self)
+    super().__init__()
 
     self._bus = bus.system_bus()
 
@@ -159,7 +159,7 @@ class Ofono(ClassLogger):
         self._state = previous_state
         raise Exception('Invalid state: ' % new_state)
 
-    except Exception, ex:
+    except Exception as ex:
       self.log().error('Error in state transition %s -> %s:  %s' % (previous_state, new_state, ex))
 
   @ClassLogger.TraceAs.call()
@@ -234,7 +234,7 @@ class OfonoHfpAg(ClassLogger):
   _voice_call_manager = None
 
   def __init__(self, path, bus):
-    ClassLogger.__init__(self)
+    super().__init__()
 
     self._bus = bus
     self._path = path
@@ -258,7 +258,7 @@ class OfonoHfpAg(ClassLogger):
   def dispose(self):
     try:
       self.hangup()
-    except Exception, ex:
+    except Exception as ex:
       self.log().warn(str(ex))
 
   def provides_voice_recognition(self):

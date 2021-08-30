@@ -15,7 +15,7 @@ class Inputs(ClassLogger):
   _pulse_callback_by_channel_name = {}
 
   def __init__(self, layout):
-    ClassLogger.__init__(self)
+    super().__init__()
 
     # IO event callbacks occur in another thread, dbus/gdk need
     # to be made aware of this.
@@ -101,7 +101,7 @@ class Outputs(ClassLogger):
   _layout = None
 
   def __init__(self, layout):
-    ClassLogger.__init__(self)
+    super().__init__()
 
     # IO event callbacks occur in another thread, dbus/gdk need
     # to be made aware of this.

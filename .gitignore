@@ -6,4 +6,4 @@ build
 *.egg-info
 dist
 setuptools-*.zip
-
+.idea

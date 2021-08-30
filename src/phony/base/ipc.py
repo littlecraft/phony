@@ -42,14 +42,14 @@ class OwnedSocketFile:
 
       if bus.path:
         socket_file.write(str(bus))
-    except Exception, ex:
+    except Exception as ex:
       self.log().warning('Unable to write socket file %s: %s' % (self.socket_file, ex))
 
   def remove_socket_file(self):
     try:
       if os.path.isfile(self.socket_file):
         os.remove(self.socket_file)
-    except Exception, ex:
+    except Exception as ex:
       self.log().warning('Unable to remove socket file %s: %s' % (self.socket_file, ex))
 
   def __enter__(self):

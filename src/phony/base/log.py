@@ -79,7 +79,7 @@ class ScopedLogger(object):
   _instance = None
 
   def __init__(self, name_or_instance, scope_label, log_level = Levels.DEBUG):
-    if isinstance(name_or_instance, basestring):
+    if isinstance(name_or_instance, str):
       self._instance = NamedLogger(name_or_instance)
     elif name_or_instance:
       self._instance = name_or_instance
@@ -128,7 +128,7 @@ class NamedLogger(object):
       return decorator
 
   def __init__(self, name_or_label_maker):
-    if isinstance(name_or_label_maker, basestring):
+    if isinstance(name_or_label_maker, str):
       self._log_name = str(name_or_label_maker)
       self._label_maker = TypeLabel()
     else:

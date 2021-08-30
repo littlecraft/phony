@@ -41,7 +41,7 @@ class NoHands(ClassLogger):
   __audio_gateway_detached_listeners = []
 
   def __init__(self, bus):
-    ClassLogger.__init__(self)
+    super().__init__()
 
     self.__bus = bus.session_bus()
 
@@ -63,7 +63,7 @@ class NoHands(ClassLogger):
         dbus_interface = DbusPaths.DBUS_INTERFACE_DBUS
       )
 
-    except dbus.exception.DBusException, (ex):
+    except dbus.exception.DBusException as ex:
       self.__fatal('Could not connect to D-Bus:\n%s' % str(ex))
 
     try:
@@ -83,15 +83,13 @@ class NoHands(ClassLogger):
         dbus_interface = DbusPaths.DBUS_INTERFACE_PROPERTIES
       )
 
-    except dbus.exceptions.DBusException, (ex):
-      self.__fatal(
-        'Could not connect to hfpd:\n%s\n\n'
-        'Ensure that hfpd and its D-Bus '
-        'service file are installed correctly.\n'
-        'If the problem persists, try starting '
-        'hfpd manually, e.g. \"hfpd\", or out of '
-        'your build directory, e.g. '
-        '\"hfpd/hfpd\"' % str(ex)
+    except dbus.exceptions.DBusException as ex:
+      self.__fatal(f"""Could not connect to hfpd:
+{ex}
+Ensure that hfpd and its D-Bus service file are installed correctly.
+If the problem persists, try starting hfpd manually, e.g. \"hfpd\",
+or out of your build directory, e.g. 'hfpd/hfpd'
+"""
       )
 
     version = self.get_property('Version')
@@ -123,7 +121,7 @@ class NoHands(ClassLogger):
     try:
       # HfpAudioGateway class is constructed via AudioGatewayAdded signal handler
       audio_gateway_path = self.__hfpd_interface.AddDevice(device_address, False)
-    except Exception, ex:
+    except Exception as ex:
       self.log().error('Could not attach device ' + str(device_address) + ' : ' + str(ex))
 
   def detach(self, adapter, device_address):
@@ -239,7 +237,7 @@ class HfpAudioGateway(ClassLogger):
   __soundio = None
 
   def __init__(self, hfp, audio_gateway_path):
-    ClassLogger.__init__(self)
+    super().__init__()
 
     self.__path = audio_gateway_path
 
@@ -331,7 +329,7 @@ class HfpAudioGateway(ClassLogger):
       self.__features = self.get_property('Features')
       for feature in self.__features:
         self.log().debug('Feature: ' + feature)
-    except ex:
+    except Exception as ex:
       self.__failure(str(ex))
 
   def __gatway_connected(self):
@@ -394,7 +392,7 @@ class HfpSoundIo(ClassLogger):
   __audio_gateway_path = None
 
   def __init__(self, hfp, audio_gateway):
-    ClassLogger.__init__(self)
+    super().__init__()
 
     self.__audio_gateway_path = audio_gateway.path()
 
@@ -424,7 +422,7 @@ class HfpSoundIo(ClassLogger):
   def start(self):
     try:
       self.__sound_io_interface.AudioGatewayStart(self.__audio_gateway_path, False)
-    except ex:
+    except Exception as ex:
       self.__failure(str(ex))
 
   @ClassLogger.TraceAs.event()

@@ -20,7 +20,7 @@ class Bluez5(ClassLogger):
   _started = False
 
   def __init__(self, bus_provider, adapter_address = None):
-    ClassLogger.__init__(self)
+    super().__init__()
     self._adapter_address = adapter_address
     self._bus = bus_provider.system_bus()
 
@@ -225,7 +225,7 @@ class PermissibleAgent(dbus.service.Object, ClassLogger):
   _capability = None
 
   def __init__(self, bus, path):
-    ClassLogger.__init__(self)
+    super().__init__()
     dbus.service.Object.__init__(self, bus, path)
 
     self._path = path
@@ -442,7 +442,7 @@ class Bluez5Device(ClassLogger):
   _bus = None
 
   def __init__(self, device, bus):
-    ClassLogger.__init__(self)
+    super().__init__()
 
     self._device = device
     self._bus = bus

@@ -19,7 +19,7 @@ class Ofono(ClassLogger):
   _poll_for_child_hfp_modem_id = None
 
   def __init__(self, bus_provider):
-    ClassLogger.__init__(self)
+    super().__init__()
 
     self._bus = bus_provider.system_bus()
 
@@ -125,7 +125,7 @@ class OfonoHfpAg(ClassLogger):
   _on_call_ended_listeners = []
 
   def __init__(self, path, bus):
-    ClassLogger.__init__(self)
+    super().__init__()
 
     self._bus = bus
     self._path = path
@@ -161,7 +161,7 @@ class OfonoHfpAg(ClassLogger):
       self._on_call_began_listeners = []
       self._on_call_ended_listeners = []
 
-    except Exception, ex:
+    except Exception as ex:
       self.log().warn(str(ex))
 
   def on_incoming_call(self, listener):
@@ -179,7 +179,7 @@ class OfonoHfpAg(ClassLogger):
   @ClassLogger.TraceAs.event()
   def answer(self, path = None):
     if not path:
-      for path,call in self._calls.iteritems():
+      for path,call in self._calls.items():
         properties = call.GetProperties()
         if 'State' in properties and properties['State'] == 'incoming':
           call.Answer()
@@ -202,7 +202,7 @@ class OfonoHfpAg(ClassLogger):
   @ClassLogger.TraceAs.event()
   def deflect_to_voicemail(self, path = None):
     if not path:
-      for path,call in self._calls.iteritems():
+      for path,call in self._calls.items():
         properties = call.GetProperties()
         if 'State' in properties:
           state = properties['State']

@@ -90,7 +90,7 @@ class PulseAudio(ClassLogger):
       )
 
   def _find_microphone_source(self, hint = None):
-    for path, properties in self._source_properties_by_path.iteritems():
+    for path, properties in self._source_properties_by_path.items():
       name = self._get_device_property(properties, 'Name')
       if PulseAudio._is_suitable_microphone_source(name):
         if not hint:
@@ -102,7 +102,7 @@ class PulseAudio(ClassLogger):
     raise Exception('No suitable microphone source found (hint="%s")' % hint)
 
   def _find_primary_audio_sink(self, hint = None):
-    for path, properties in self._sink_properties_by_path.iteritems():
+    for path, properties in self._sink_properties_by_path.items():
       name = self._get_device_property(properties, 'Name')
       if PulseAudio._is_suitable_primary_audio_sink(name):
         if not hint:
@@ -164,10 +164,10 @@ class PulseAudio(ClassLogger):
   def _show_properties(self):
     self.log().debug('PulseAudio version %s' % self._get_core_property('Version'))
 
-    for path, properties in self._sink_properties_by_path.iteritems():
+    for path, properties in self._sink_properties_by_path.items():
       self.log().debug('Sink %s: %s' % (path, self._get_device_property(properties, 'Name')))
 
-    for path, properties in self._source_properties_by_path.iteritems():
+    for path, properties in self._source_properties_by_path.items():
       self.log().debug('Source %s: %s' % (path, self._get_device_property(properties, 'Name')))
 
   def _get_core_property(self, prop):

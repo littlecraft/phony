@@ -29,7 +29,7 @@ class HandsFreeHeadset(ClassLogger):
   _on_device_connected_listeners = []
 
   def __init__(self, bus_provider, adapter, hfp, audio):
-    ClassLogger.__init__(self)
+    super().__init__()
 
     self._bus = bus_provider.session_bus()
 
@@ -75,7 +75,7 @@ class HandsFreeHeadset(ClassLogger):
   def enable(self):
     try:
       self._exec("rfkill unblock bluetooth")
-    except Exception, ex:
+    except Exception as ex:
       self.log().debug('Unable to unblock bluetooth with rfkill: %s' % ex)
 
   @ClassLogger.TraceAs.call(log_level = Levels.INFO)
@@ -199,7 +199,7 @@ class HandsFreeHeadset(ClassLogger):
       if self._device:
         self._device.dispose()
         self._device = None
-    except Exception, ex:
+    except Exception as ex:
       self.log().warn('Reset error: %s' % ex)
 
   @ClassLogger.TraceAs.event(log_level = Levels.INFO)
@@ -239,7 +239,7 @@ class HandsFreeHeadset(ClassLogger):
         self._device,
         self._audio_gateway_attached
       )
-    except Exception, ex:
+    except Exception as ex:
       self.log().error('Error attaching to HFP gateway: %s' % ex)
       self.reset()
 

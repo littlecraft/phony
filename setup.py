@@ -18,13 +18,13 @@ class WithPostInstall(install):
     self.post_install()
 
   def post_install(self):
-    print 'Post installation:'
+    print('Post installation:')
 
     config_pulseaudio = os.path.join(
       script_directory(),
       'configure-pulseaudio-headset-backend.sh'
     )
-    print subprocess.check_output(config_pulseaudio)
+    print(subprocess.check_output(config_pulseaudio))
 
 setup(
   name = 'phony',

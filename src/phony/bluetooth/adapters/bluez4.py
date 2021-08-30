@@ -31,7 +31,7 @@ class Bluez4(ClassLogger):
   __started = False
 
   def __init__(self, bus_constructor, hci_device):
-    ClassLogger.__init__(self)
+    super().__init__()
     self.__hci_device = hci_device
     self.__bus_constructor = bus_constructor
 
@@ -202,7 +202,7 @@ class Bluez4AdapterSignalHandler(ClassLogger):
   __adapter = None
 
   def __init__(self, adapter):
-    ClassLogger.__init__(self)
+    super().__init__()
     self.__adapter = adapter
 
     adapter_obj = adapter.adapter()
@@ -219,9 +219,9 @@ class Bluez4AdapterSignalHandler(ClassLogger):
   def device_found(self, address, properties):
     try:
       self.__adapter.add_client_endpoint(address)
-    except TooManyClientsException, ex:
+    except TooManyClientsException as ex:
       self.log().debug('Maximum number of clients reached')
-    except Exception, ex:
+    except Exception:
       pass
 
   #def create_device_reply(device):
@@ -260,7 +260,7 @@ class Bluez4PermissibleAgent(dbus.service.Object, ClassLogger):
   __capability = None
 
   def __init__(self, adapter, path):
-    ClassLogger.__init__(self)
+    super().__init__()
     dbus.service.Object.__init__(self, adapter.bus(), path)
 
     self.__path = path
@@ -332,6 +332,7 @@ class Bluez4Device(ClassLogger):
   __device = None
 
   def __init__(self, device):
+    super().__init__()
     self.__device = device
 
   def address(self):
@@ -347,9 +348,7 @@ class Bluez4Device(ClassLogger):
     return self.address()
 
 class TooManyClientsException(Exception):
-  def __init__(self, *args, **kwargs):
-    Exception.__init__(self, *args, **kwargs)
+  pass
 
 class ClientNotPairedException(Exception):
-  def __init__(self, *args, **kwargs):
-    Exception.__init__(self, *args, **kwargs)
+  pass
